@@ -14,9 +14,6 @@ def get_all_alumni():
                      Mahasiswa.parent_salary, Nilai.semester_1, Nilai.semester_2, Nilai.semester_3,
                      Nilai.semester_4, Nilai.ipk, Alumni.keterangan_lulus) \
         .all()
-    # clean the noise in the data
-    # for i in range(len(alumni)):
-    #     alumni[i] = alumni[i][1:]
     return alumni
 
 
@@ -46,33 +43,14 @@ def get_pandas_alumni():
         raw_data['semester_3'] += [data.semester_3]
         raw_data['semester_4'] += [data.semester_4]
         raw_data['ipk'] += [data.ipk]
-        raw_data['keterangan_lulus'] += [data.keterangan_lulus]
+        if data.keterangan_lulus.lower() == "tepat waktu":
+            raw_data['keterangan_lulus'] += [1]
+        elif data.keterangan_lulus.lower() == 'tidak tepat waktu':
+            raw_data['keterangan_lulus'] += [0]
+        else:
+            return "Error, wrong data of data"
 
     df = pd.DataFrame(raw_data, columns=['school_type', 'gender', 'school-city', 'parent_salary', 'semester_1',
                                          'semester_2', 'semester_3', 'semester_4', 'ipk', 'keterangan_lulus'])
 
     return df
-
-# # determine all the features
-# school_type_features = []
-# gender_features = []
-# school_city_features = []
-# parent_salary_features = []
-# semester_1_features = []
-# semester_2_features = []
-# semester_3_features = []
-# semester_4_features = []
-# ipk_features = []
-# keterangan_lulus_features = []
-#
-# for data in alumni:
-#     school_type_features.append(data.school_type)
-#     gender_features.append(data.gender)
-#     school_city_features.append(data.school_city)
-#     parent_salary_features.append(data.parent_salary)
-#     semester_1_features.append(data.semester_1)
-#     semester_2_features.append(data.semester_2)
-#     semester_3_features.append(data.semester_3)
-#     semester_4_features.append(data.semester_4)
-#     ipk_features.append(data.ipk)
-#     keterangan_lulus_features.append(data.keterangan_lulus)
