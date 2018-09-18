@@ -1,6 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <title>
+        {% block title %}
+
+        {% endblock %}
+    </title>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -12,13 +17,10 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap4.min.css">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
-    {% block title %}
-
-    {% endblock %}
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">NBC</a>
+    <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">NBC</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -37,13 +39,10 @@
                 </div>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Training</a>
+                <a class="nav-link" href="{{ url_for('dashboard.build') }}">Model Building</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Testing</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Predict</a>
+                <a class="nav-link" href="{{ url_for('dashboard.predict') }}">Predict</a>
             </li>
         </ul>
         <form class="form-inline">
@@ -52,12 +51,21 @@
     </div>
 </nav>
 
-{% block content %}
+<div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}" role="alert">{{ message }}</ul>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+</div>
+<div>
+    {% block content %}
 
-
-{% endblock %}
-
-<div class="m-5"></div>
+    {% endblock %}
+</div>
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -78,8 +86,6 @@
     $(document).ready(function() {
         $('#myTable').DataTable();
     } );
-
-
 
 </script>
 {% block script %}

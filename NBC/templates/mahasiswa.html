@@ -1,13 +1,18 @@
 {% extends 'template.html' %}
 
 {% block title %}
-<title>Users</title>
+Mahasiswa
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="p-3">
+    <div class="mt-3">
         <h1 class="h1">Data Mahasiswa</h1>
+    </div>
+    <div class="mt-3 mb-4">
+        <form method="post">
+            <button class="btn btn-outline-primary" type="submit">Predict Data</button>
+        </form>
     </div>
     <table class="table table-stripped table-bordered dt-responsive nowrap" id="myTable" style="width:100%">
         <thead class="thead-dark">
@@ -23,7 +28,6 @@
             <th scope="col">IPS 3</th>
             <th scope="col">IPS 4</th>
             <th scope="col">IPK</th>
-            <th scope="col">Lulus</th>
         </tr>
         </thead>
         <tbody>
@@ -40,7 +44,6 @@
             <td>{{ data.semester_3 }}</td>
             <td>{{ data.semester_4 }}</td>
             <td>{{ data.ipk }}</td>
-            <td>{{ data.lulus }}</td>
         </tr>
         {% endfor %}
         </tbody>

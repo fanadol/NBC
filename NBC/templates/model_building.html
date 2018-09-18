@@ -1,0 +1,16 @@
+{% extends 'template.html' %}
+
+{% block title %}
+Data Training
+{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h2 class="display-3">Build Your Model!</h2>
+    <p class="lead">Here, you can build your model, either using your own CSV file or existing datasets</p>
+    <p class="lead">Existing dataset use alumni data to create a model</p>
+    <hr class="my-4">
+    <a class="btn btn-outline-primary" href="{{ url_for('dashboard.cross_validation') }}">Existing Dataset</a>
+    <a class="btn btn-outline-success" href="{{ url_for('dashboard.upload') }}">Upload CSV</a>
+</div>
+{% endblock %}

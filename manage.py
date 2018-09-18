@@ -7,7 +7,6 @@ from NBC.views.models import nilai
 from NBC.views.models import alumni
 from NBC.views.models import training
 from NBC.views.models import testing
-from NBC.views.models import hasil
 from NBC.views.models import user
 
 app = create_app('dev')

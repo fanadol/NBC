@@ -1,0 +1,24 @@
+{% extends 'template.html' %}
+
+{% block title %}
+Upload Datasets
+{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h2 class="display-5">Upload</h2>
+    <p class="lead">Please upload the file in csv comma delimiter format.</p>
+    <hr class="my-4">
+    <p class="lead">The data should contain 10 columns: </p>
+    <p class="lead">Tipe Sekolah, Gender, Kota Sekolah, Gaji Orang Tua, IPS-1, IPS-2, IPS-3, IPS-4, IPK, Keterangan
+        Lulus</p>
+    <hr class="my-4">
+    <form action="">
+        <div class="form-group">
+            <label for="uploadFile">Choose your file</label>
+            <input type="file" class="form-control-file" id="uploadFile">
+        </div>
+        <button class="btn btn-outline-primary " type="submit">Submit</button>
+    </form>
+</div>
+{% endblock %}
