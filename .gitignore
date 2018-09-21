@@ -1,2 +1,5 @@
 .idea/
 __pycache__/
+migrations/
+node_modules
+bower_components

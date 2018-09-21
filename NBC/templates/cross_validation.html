@@ -4,31 +4,34 @@
 Model Testing
 {% endblock %}
 
+{% block subtitle %}
+Model Score
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="mt-4">
-        <form method="post">
-            <button class="btn btn-outline-primary" type="submit">Create Model</button>
-        </form>
-    </div>
-    <div class="row mt-3">
-        <div class="col-sm">
-            <h2>Cross Validation</h2>
-            <div class="table-responsive">
-                <table class="table">
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-green">
+            <div class="panel-heading">
+                Cross Validation
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <table width="100%" class="table table-striped table-bordered table-hover">
                     <thead>
                     <tr>
-                        <th scope="col">Fold</th>
-                        <th scope="col">Accuracy</th>
-                        <th scope="col">Precision</th>
-                        <th scope="col">Recall</th>
-                        <th scope="col">f1-score</th>
+                        <th>Fold</th>
+                        <th>Accuracy Score</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>F1-Score</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for score in scores %}
-                    <tr>
-                        <th scope="row">{{ score.numb }}</th>
+                    <tr class="odd gradeX">
+                        <td>{{ score.numb }}</td>
                         <td>{{ score.score }}</td>
                         <td>{{ score.precision }}</td>
                         <td>{{ score.recall }}</td>
@@ -36,8 +39,8 @@ Model Testing
                     </tr>
                     {% endfor %}
                     {% for avg in avg %}
-                    <tr>
-                        <th scope="row">Average</th>
+                    <tr class="even gradeC">
+                        <td>Mean</td>
                         <td>{{ avg.avg_score }}</td>
                         <td>{{ avg.avg_prec }}</td>
                         <td>{{ avg.avg_recall }}</td>
@@ -46,37 +49,79 @@ Model Testing
                     {% endfor %}
                     </tbody>
                 </table>
+                <!-- /.table-responsive -->
             </div>
+            <!-- /.panel-body -->
         </div>
-        <div class="col-sm">
-            <h2>Confusion Matrix</h2>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Pre_Tidak</th>
-                        <th scope="col">Pre_Tepat</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <th scope="row">Act_Tidak</th>
-                        <td>{{ cf[0][0] }}</td>
-                        <td>{{ cf[0][1] }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Act_Tepat</th>
-                        <td>{{ cf[1][0] }}</td>
-                        <td>{{ cf[1][1] }}</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="">
-            <img src="/static/ROC.png" alt="">
-        </div>
+        <!-- /.panel -->
     </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                Confusion Matrix
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>P_Negative</th>
+                            <th>P_Positive</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>A_Negative</td>
+                            <td>{{ cf[0][0] }}</td>
+                            <td>{{ cf[0][1] }}</td>
+                        </tr>
+                        <tr>
+                            <td>A_Positive</td>
+                            <td>{{ cf[1][0] }}</td>
+                            <td>{{ cf[1][1] }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.table-responsive -->
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-6 -->
+    <div class="col-lg-6">
+
+    </div>
+    <!-- /.col-lg-6 -->
+</div>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Basic Table
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <img src="/static/ROC.png" alt="ROC">
+                </div>
+                <!-- /.table-responsive -->
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-6 -->
+    <div class="col-lg-6">
+
+    </div>
+    <!-- /.col-lg-6 -->
 </div>
 {% endblock %}
