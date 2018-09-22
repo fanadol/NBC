@@ -105,40 +105,7 @@ Dashboard
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
-                <table width="100%" class="table table-striped table-bordered table-hover"
-                       id="dataTables-example">
-                    <thead>
-                    <tr>
-                        <th>Nama</th>
-                        <th>TS</th>
-                        <th>KS</th>
-                        <th>JK</th>
-                        <th>GO</th>
-                        <th>IPS1</th>
-                        <th>IPS2</th>
-                        <th>IPS3</th>
-                        <th>IPS4</th>
-                        <th>IPK</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for siswa in mahasiswa %}
-                    <tr class="">
-                        <td>{{ siswa.name }}</td>
-                        <td>{{ siswa.school_type }}</td>
-                        <td>{{ siswa.school_city }}</td>
-                        <td>{{ siswa.gender }}</td>
-                        <td>{{ siswa.parent_salary }}</td>
-                        <td>{{ siswa.semester_1 }}</td>
-                        <td>{{ siswa.semester_2 }}</td>
-                        <td>{{ siswa.semester_3 }}</td>
-                        <td>{{ siswa.semester_4 }}</td>
-                        <td>{{ siswa.ipk }}</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                <!-- /.table-responsive -->
+                {{ mahasiswa | safe }}
             </div>
             <!-- /.panel-body -->
         </div>

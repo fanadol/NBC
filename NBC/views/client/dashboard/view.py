@@ -20,15 +20,17 @@ from NBC.views.models.nilai import Nilai
 from NBC.views.models.user import User
 from NBC.views.models.testing import Testing
 from NBC.views.models.training import Training
-from NBC.views.service.alumni_service import get_pandas_alumni
-from NBC.views.service.mahasiswa_service import get_pandas_mahasiswa, get_all_mahasiswa
-from NBC.views.service.prediction_service import save_to_db, get_all_testing, get_all_testing_result, get_an_id
+from NBC.views.service.alumni_service import get_all_alumni
+from NBC.views.service.mahasiswa_service import get_all_mahasiswa, get_mahasiswa
+from NBC.views.service.prediction_service import save_to_db, train_test_target_split, get_all_testing_result, \
+    pd_concat_row, get_an_id
 from NBC.views.service.training_service import get_all_training, delete_all_training
 
 
 @dashboard.route('/')
 def index():
-    return render_template('dashboard.html')
+    mhs = get_mahasiswa()
+    return render_template('mahasiswa.html', mahasiswa=mhs)
 
 
 @dashboard.route('/users', methods=["GET", "POST"])
@@ -52,22 +54,19 @@ def alumni():
 @dashboard.route('/mahasiswa', methods=["GET", "POST"])
 def mahasiswa():
     mahasiswa = get_all_mahasiswa()
+    alumni = get_all_alumni()
     if request.method == "POST":
-        # query all the data
-        alumni = get_pandas_alumni()
-        mhs = get_pandas_mahasiswa()
-        # concat the data
-        con = pd.concat([alumni, mhs.drop('id', axis=1)], keys=['train', 'test'], sort=True).fillna(0)
+        # concat the data without column id in each mahasiswa and alumni
+        con = pd_concat_row(alumni.drop('id', axis=1), mahasiswa.drop('id', axis=1))
         # one hot encoder, axis 1 mean column
         enc = pd.get_dummies(con).astype(int)
-        x = np.array(enc.loc['train'].drop('keterangan_lulus', axis=1))
-        y = np.array(enc.loc['train']['keterangan_lulus'])
-        pred_data = np.array(enc.loc['test'].drop('keterangan_lulus', axis=1))
+        # split the x, y, and target
+        x, y, target = zip(*train_test_target_split(enc))
         # create the model
         model = MultinomialNB()
         # predict the 10th data from dataset for testing purpose
         model.fit(x, y)
-        pred = model.predict(pred_data)
+        pred = model.predict(target)
         # change the predict from number to string
         pred = pred.astype(str)
         for i in range(len(pred)):
@@ -77,7 +76,7 @@ def mahasiswa():
                 pred[i] = 'Tepat Waktu'
         # insert the result to database
         i = 0
-        for id in mhs['id'].values:
+        for id in mahasiswa['id'].values:
             existing_mahasiswa = get_an_id(int(id))
             if not existing_mahasiswa:
                 data = Testing(
@@ -87,7 +86,11 @@ def mahasiswa():
                 save_to_db(data)
             i += 1
         return redirect(url_for('dashboard.predict'))
-    return render_template('dashboard.html', mahasiswa=mahasiswa)
+    mahasiswa.columns = ['Nama', 'TS', 'KS', 'JK', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK']
+    mahasiswa_to_html = mahasiswa.to_html(
+        classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0)
+    styled_table = mahasiswa_to_html.replace('<table ', '<table style="width:100%" ')
+    return render_template('dashboard.html', mahasiswa=styled_table)
 
 
 @dashboard.route('/build', methods=["GET"])
@@ -103,7 +106,7 @@ def upload():
 @dashboard.route('/cross_validation', methods=["GET", "POST"])
 def cross_validation():
     # query all the data
-    alumni = get_pandas_alumni()
+    alumni = get_all_alumni()
     # if create model button is clicked
     if request.method == "POST":
         delete_all_training()
@@ -228,14 +231,14 @@ def pgolf():
         })
         df2 = pd.concat([df, new_data], keys=['train', 'test'], sort=True).fillna(0)
         enc = pd.get_dummies(df2).astype(int)
-        model = MultinomialNB()
+        model = MultinomialNB(alpha=0)
         x = enc.loc['train'].drop('play', axis=1)
         y = enc.loc['train']['play']
         pred_data = enc.loc['test'].drop('play', axis=1)
         model.fit(x, y)
         predict = model.predict(pred_data)
         predict_proba = model.predict_proba(pred_data)
-    return render_template('prediction.html', predict=predict, predict_proba=predict_proba)
+    return render_template('predict_golf.html', predict=predict, predict_proba=predict_proba)
 
 
 @dashboard.route('/test/mix')
@@ -331,12 +334,9 @@ def ptest_multi():
         })
         df = pd.DataFrame(data, columns=features_x + features_y)
         df[features_y] = df[features_y].astype(int)
-        concat = pd.concat([df, df_target], keys=['train', 'test'], sort=True).fillna(0)
+        concat = pd_concat_row(df, df_target)
         encode = pd.get_dummies(concat).astype(int)
-        x = encode.loc['train'].drop(features_y, axis=1)
-        y = encode.loc['train'][features_y]
-        target = encode.loc['test'].drop(features_y, axis=1)
-
+        x, y, target = zip(*train_test_target_split(encode))
         model = MultinomialNB(alpha=0)
         model.fit(x, y)
         result = model.predict(target)
