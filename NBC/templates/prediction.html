@@ -1,106 +1,117 @@
 {% extends 'template.html' %}
-{% block title %}
-Prediction
+
+{% block subtitle %}
+Data Hasil Prediksi
 {% endblock %}
+
 {% block content %}
-<!--<div class="col-md-2">-->
-<!--<form>-->
-<!--<div class="form-group">-->
-<!--<label for="nama">Nama</label>-->
-<!--<input type="text" class="form-control" id="nama" placeholder="John Doe">-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="school_type">Jenis Sekolah</label>-->
-<!--<select name="school_type_dd" id="school_type" class="form-control">-->
-<!--<option value="Laki-Laki">Laki</option>-->
-<!--<option value="Perempuan">Perempuan</option>-->
-<!--</select>-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="gender">Gender</label>-->
-<!--<select name="gender_dd" id="gender" class="form-control">-->
-<!--<option value="SMA">SMA</option>-->
-<!--<option value="SMK">SMK</option>-->
-<!--<option value="Lain-Lain">Lain</option>-->
-<!--</select>-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="school_city">Kota Sekolah</label>-->
-<!--<select name="school_city_dd" id="school_city" class="form-control">-->
-<!--<option value="Dalam Kota">Dalam Kota</option>-->
-<!--<option value="Luar Kota">Luar Kota</option>-->
-<!--</select>-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="parent_salary">Gaji Orangtua</label>-->
-<!--<input type="text" class="form-control" id="parent_salary" placeholder="3000000 4000000 ...">-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="ips1">IPS 1</label>-->
-<!--<input type="text" id="ips1" placeholder="3.5" class="form-control">-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="ips2">IPS 2</label>-->
-<!--<input type="text" id="ips2" placeholder="3.5" class="form-control">-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="ips3">IPS 3</label>-->
-<!--<input type="text" id="ips3" placeholder="3.5" class="form-control">-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="ips4">IPS 4</label>-->
-<!--<input type="text" id="ips4" placeholder="3.5" class="form-control">-->
-<!--</div>-->
-<!--<div class="form-group">-->
-<!--<label for="ipk">IPK</label>-->
-<!--<input type="text" id="ipk" placeholder="3.5" class="form-control">-->
-<!--</div>-->
-<!--<button class="btn btn-outline-primary" type="submit">Submit</button>-->
-<!--</form>-->
-<!--</div>-->
-<!--<div class="col-md-8">-->
-
-<!--</div>-->
-<div class="container">
-    <div class="p-3">
-        <h1 class="h1">Prediksi Mahasiswa</h1>
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-3 col-md-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-3">
+                        <i class="fa fa-tasks fa-5x"></i>
+                    </div>
+                    <div class="col-xs-9 text-right">
+                        <div class="huge">26</div>
+                        <div>Data User</div>
+                    </div>
+                </div>
+            </div>
+            <a href="#">
+                <div class="panel-footer">
+                    <span class="pull-left">View Details</span>
+                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                    <div class="clearfix"></div>
+                </div>
+            </a>
+        </div>
     </div>
-    <table class="table table-stripped table-bordered dt-responsive nowrap" id="myTable" style="width:100%">
-        <thead class="thead-dark">
-        <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Name</th>
-            <th scope="col">Tipe Sekolah</th>
-            <th scope="col">Gender</th>
-            <th scope="col">Kota Sekolah</th>
-            <th scope="col">Gaji Orangtua</th>
-            <th scope="col">IPS 1</th>
-            <th scope="col">IPS 2</th>
-            <th scope="col">IPS 3</th>
-            <th scope="col">IPS 4</th>
-            <th scope="col">IPK</th>
-            <th scope="col">Hasil</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for data in mahasiswa %}
-        <tr>
-            <th scope="row">{{ data.id }}</th>
-            <td>{{ data.name }}</td>
-            <td>{{ data.school_type }}</td>
-            <td>{{ data.gender }}</td>
-            <td>{{ data.school_city }}</td>
-            <td>{{ data.parent_salary }}</td>
-            <td>{{ data.semester_1 }}</td>
-            <td>{{ data.semester_2 }}</td>
-            <td>{{ data.semester_3 }}</td>
-            <td>{{ data.semester_4 }}</td>
-            <td>{{ data.ipk }}</td>
-            <td>{{ data.hasil }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <div class="col-lg-3 col-md-6">
+        <div class="panel panel-green">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-3">
+                        <i class="fa fa-tasks fa-5x"></i>
+                    </div>
+                    <div class="col-xs-9 text-right">
+                        <div class="huge">12</div>
+                        <div>Data Mahasiswa</div>
+                    </div>
+                </div>
+            </div>
+            <a href="#">
+                <div class="panel-footer">
+                    <span class="pull-left">View Details</span>
+                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                    <div class="clearfix"></div>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="panel panel-yellow">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-3">
+                        <i class="fa fa-tasks fa-5x"></i>
+                    </div>
+                    <div class="col-xs-9 text-right">
+                        <div class="huge">124</div>
+                        <div>Data Latih</div>
+                    </div>
+                </div>
+            </div>
+            <a href="#">
+                <div class="panel-footer">
+                    <span class="pull-left">View Details</span>
+                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                    <div class="clearfix"></div>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="panel panel-red">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-3">
+                        <i class="fa fa-support fa-5x"></i>
+                    </div>
+                    <div class="col-xs-9 text-right">
+                        <div class="huge">13</div>
+                        <div>Prediksi</div>
+                    </div>
+                </div>
+            </div>
+            <a href="#">
+                <div class="panel-footer">
+                    <span class="pull-left">View Details</span>
+                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                    <div class="clearfix"></div>
+                </div>
+            </a>
+        </div>
+    </div>
 </div>
-
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Data Prediksi
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                {{ prediction | safe }}
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->
 {% endblock %}

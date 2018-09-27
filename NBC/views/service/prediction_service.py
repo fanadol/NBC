@@ -7,16 +7,20 @@ from NBC.views.models.nilai import Nilai
 from NBC.views.models.testing import Testing
 
 
-def get_all_testing():
-    return Testing.query.all()
-
-
-def get_an_id(id):
+def get_a_prediction(id):
     return Testing.query.filter_by(id_mahasiswa=id).first()
 
 
-def get_all_testing_result():
-    testing = Mahasiswa.query.join(Nilai, Mahasiswa.id == Nilai.id_mahasiswa).join(Testing,
+def get_all_prediction_result(id=False):
+    """
+    Query prediction result from database, then change it into pandas dataframe.
+    :param id = boolean:
+    determine whether need id column or not
+    :return pandas.DataFrame without Object Alumni, and id column:
+    """
+    id_feature = ['id']
+    selected_features = ['Nama', 'TS', 'KS', 'JK', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Hasil']
+    prediction = Mahasiswa.query.join(Nilai, Mahasiswa.id == Nilai.id_mahasiswa).join(Testing,
                                                                                    Mahasiswa.id == Testing.id_mahasiswa) \
         .add_columns(Mahasiswa.id,
                      Mahasiswa.name,
@@ -30,11 +34,26 @@ def get_all_testing_result():
                      Nilai.semester_4,
                      Nilai.ipk,
                      Testing.hasil).all()
-    return testing
+    df = pd.DataFrame(prediction)
+    # create empty data frame with columns for DataFrame.to_html()
+    if df.empty and not id:
+        return pd.DataFrame(prediction, columns=selected_features)
+    elif df.empty and id:
+        return pd.DataFrame(prediction, columns=id_feature + selected_features)
+    # if data frame not empty
+    else:
+        if not id:
+            return df.drop(['Mahasiswa', 'id'], axis=1)
+        else:
+            return df.drop('Mahasiswa', axis=1)
 
 
 def pd_concat_row(data1, data2):
     return pd.concat([data1, data2.drop('id', axis=1)], keys=['train', 'test'], sort=True).fillna(0)
+
+
+def pd_concat_row_csv(data1, data2):
+    return pd.concat([data1, data2], keys=['train', 'test'], sort=True).fillna(0)
 
 
 def train_test_target_split(enc):
@@ -46,9 +65,4 @@ def train_test_target_split(enc):
     x = np.array(enc.loc['train'].drop('keterangan_lulus', axis=1))
     y = np.array(enc.loc['train']['keterangan_lulus'])
     target = np.array(enc.loc['test'].drop('keterangan_lulus', axis=1))
-    return list(zip(x, y, target))
-
-
-def save_to_db(data):
-    db.session.add(data)
-    db.session.commit()
+    return x, y, target
