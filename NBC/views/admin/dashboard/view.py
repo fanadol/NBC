@@ -11,7 +11,7 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from scipy.interpolate import spline
 from flask import render_template, request, redirect, url_for, flash
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_curve, auc
 from scipy import interp
@@ -173,7 +173,7 @@ def cross_validation():
     # create the model
     model = MultinomialNB()
     # cross validation
-    sf = StratifiedKFold(n_splits=10)
+    sf = KFold(n_splits=10)
     cf = np.array([[0, 0], [0, 0]])
     f1 = []
     recall = []
@@ -191,15 +191,21 @@ def cross_validation():
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # fit the model, then predict the test fold
+        print("TRAIN: ", train_index, "TEST: ", test_index)
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         y_prob = model.predict_proba(x_test)[:, 1]
+        print("Y Test: {}".format(y_test))
+        print("Y Prob: {}".format(y_prob))
         # compute confusion matrix, ROC curve and AUC
         cf += confusion_matrix(y_test, y_pred)
         fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+        print("FPR: {} TPR: {}".format(fpr, tpr))
+        # y_smooth = spline(fpr, tpr, mean_fpr)
         tprs.append(interp(mean_fpr, fpr, tpr))
         tprs[-1][0] = 0.0
-        print(y_pred)
+        # print("fpr: {}".format(fpr))
+        # print("tpr: {}".format(tpr))
         # compute the auc using fpr and tpr
         roc_auc = auc(fpr, tpr)
         aucs.append(roc_auc)
@@ -214,7 +220,7 @@ def cross_validation():
         scores.append(score)
         i += 1
     # loop above is same as cv = cross_val_score(model, x, y, cv=10)
-
+    # print("tprs: {}".format(tprs))
     # put all scores inside a dict
     items = []
     for i in range(len(scores)):
@@ -224,6 +230,8 @@ def cross_validation():
     # put the average inside a dict
     avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
                     avg_recall=np.average(recall), avg_score=np.average(scores))]
+
+
 
     # plot the ROC Curve, then save it into image file
     plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', label='Luck', alpha=.8)
@@ -239,7 +247,7 @@ def cross_validation():
     std_tpr = np.std(tprs, axis=0)
     tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
     tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-    plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2, label=r'$\pm$ 1 std.dev.')
+    #plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2, label=r'$\pm$ 1 std.dev.')
 
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
@@ -249,6 +257,26 @@ def cross_validation():
     plt.legend(loc='lower right')
     path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
     output_path = os.path.join(path, 'static/ROC.png')
+    output_path_kfold = os.path.join(path, 'static/kfold.png')
     plt.savefig(output_path)
+    plt.clf()
+    # plot the k fold
+    fig, ax = plt.subplots()
+    bar_width = 0.2
+    N = 10
+    ind = np.arange(N)
+    rect_f1 = ax.bar(ind - 2*bar_width, f1, bar_width, color='r', label='f1-score')
+    rect_recall = ax.bar(ind - bar_width, recall, bar_width, color='g', label='recall')
+    rect_precision = ax.bar(ind, precision, bar_width, color='b', label='precision')
+    rect_score = ax.bar(ind + bar_width, scores, bar_width, color='y', label='accuracy')
+    ax.set_xlabel('Folds')
+    ax.set_ylabel('Scores')
+    ax.set_title('Stratified 10 Fold Cross Validation')
+    ax.set_xticks(ind + bar_width / 2)
+    ax.set_xticklabels(('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'))
+    ax.legend()
+    fig.set_size_inches(15, 10)
+    fig.tight_layout()
+    plt.savefig(output_path_kfold)
     plt.clf()
     return render_template('cross_validation.html', scores=items, cf=cf, avg=avgitem)
