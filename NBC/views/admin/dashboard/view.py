@@ -200,7 +200,10 @@ def cross_validation():
         # compute confusion matrix, ROC curve and AUC
         cf += confusion_matrix(y_test, y_pred)
         fpr, tpr, thresholds = roc_curve(y_test, y_prob)
-        print("FPR: {} TPR: {}".format(fpr, tpr))
+        print("Unique y test: {}".format(pd.Series(y_test).unique()))
+        print("Unique y prob: {}".format(pd.Series(y_prob).unique()))
+        print("FPR: {}".format(fpr))
+        print("Threshold: {}".format(thresholds))
         # y_smooth = spline(fpr, tpr, mean_fpr)
         tprs.append(interp(mean_fpr, fpr, tpr))
         tprs[-1][0] = 0.0
@@ -211,7 +214,6 @@ def cross_validation():
         aucs.append(roc_auc)
         # plot it
         plt.plot(fpr, tpr, lw=1, alpha=0.5, label='ROC fold %d (AUC = %0.2f)' % (i, roc_auc))
-
         # calculate the accuracy, f1-score, recall, precision
         f1.append(f1_score(y_test, y_pred, average='macro'))
         recall.append(recall_score(y_test, y_pred, average='macro'))
@@ -231,8 +233,6 @@ def cross_validation():
     avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
                     avg_recall=np.average(recall), avg_score=np.average(scores))]
 
-
-
     # plot the ROC Curve, then save it into image file
     plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', label='Luck', alpha=.8)
     mean_tpr = np.mean(tprs, axis=0)
@@ -247,7 +247,7 @@ def cross_validation():
     std_tpr = np.std(tprs, axis=0)
     tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
     tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-    #plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2, label=r'$\pm$ 1 std.dev.')
+    # plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2, label=r'$\pm$ 1 std.dev.')
 
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
@@ -265,7 +265,7 @@ def cross_validation():
     bar_width = 0.2
     N = 10
     ind = np.arange(N)
-    rect_f1 = ax.bar(ind - 2*bar_width, f1, bar_width, color='r', label='f1-score')
+    rect_f1 = ax.bar(ind - 2 * bar_width, f1, bar_width, color='r', label='f1-score')
     rect_recall = ax.bar(ind - bar_width, recall, bar_width, color='g', label='recall')
     rect_precision = ax.bar(ind, precision, bar_width, color='b', label='precision')
     rect_score = ax.bar(ind + bar_width, scores, bar_width, color='y', label='accuracy')
