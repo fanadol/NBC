@@ -1,5 +1,5 @@
 from NBC import db
-from NBC.views.models.training import Training
+from NBC.models.training import Training
 
 
 def delete_all_training():

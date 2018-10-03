@@ -2,7 +2,7 @@ from flask import render_template, redirect, flash, url_for, request
 from flask_login import login_user, login_required, logout_user
 
 from . import auth
-from NBC.views.models.user import User
+from NBC.models.user import User
 
 
 @auth.route('/admin/login', methods=["GET", "POST"])

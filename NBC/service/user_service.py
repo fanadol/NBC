@@ -1,6 +1,6 @@
 import pandas as pd
 
-from NBC.views.models.user import User
+from NBC.models.user import User
 
 
 def get_all_users(id=False):

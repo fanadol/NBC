@@ -1,12 +1,15 @@
 import csv
 import pandas as pd
 import numpy as np
+import os
 from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import MultinomialNB, GaussianNB
-from flask import render_template
+from flask import render_template, request
 
 from . import examples
-from NBC.views.service.prediction_service import pd_concat_row_csv, train_test_target_split
+from NBC.service.prediction_service import pd_concat_row_csv, train_test_target_split
+from NBC.service.utils_service import allowed_file, clean_train_column, clean_train_school_type, clean_train_with_mean, \
+    clean_train_with_median, clean_train_reorder_column
 
 
 @examples.route('/predict_golf', methods=["GET"])
@@ -142,3 +145,16 @@ def ptest_multi():
         prob = model.predict_proba(target)
 
         return render_template('multinomial.html', prob=prob, result=result)
+
+
+@examples.route('/csv_maker', methods=["GET", "POST"])
+def csv_maker():
+    if request.method == "POST":
+        df = pd.read_csv('/Data Penelitian - Sheet2.csv')
+        df = clean_train_column(df)
+        df['Asal Sekolah'] = clean_train_school_type(df['Asal Sekolah'])
+        df['Gaji Orang Tua'] = clean_train_with_mean(df['Gaji Orang Tua'])
+        df = clean_train_reorder_column(df)
+        df.to_csv('Data Result.csv', encoding='utf-8')
+        return render_template('csv_maker.html')
+    return render_template('csv_maker.html')

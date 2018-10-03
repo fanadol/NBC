@@ -1,10 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from NBC import db
-from NBC.views.models.mahasiswa import Mahasiswa
-from NBC.views.models.nilai import Nilai
-from NBC.views.models.testing import Testing
+from NBC.models.hasil import Hasil
+from NBC.models.testing import Testing
 
 
 def get_a_prediction(id):
@@ -19,21 +17,16 @@ def get_all_prediction_result(id=False):
     :return pandas.DataFrame without Object Alumni, and id column:
     """
     id_feature = ['id']
-    selected_features = ['Nama', 'TS', 'KS', 'JK', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Hasil']
-    prediction = Mahasiswa.query.join(Nilai, Mahasiswa.id == Nilai.id_mahasiswa).join(Testing,
-                                                                                   Mahasiswa.id == Testing.id_mahasiswa) \
-        .add_columns(Mahasiswa.id,
-                     Mahasiswa.name,
-                     Mahasiswa.school_type,
-                     Mahasiswa.gender,
-                     Mahasiswa.school_city,
-                     Mahasiswa.parent_salary,
-                     Nilai.semester_1,
-                     Nilai.semester_2,
-                     Nilai.semester_3,
-                     Nilai.semester_4,
-                     Nilai.ipk,
-                     Testing.hasil).all()
+    selected_features = ['TS', 'JK', 'KS', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Hasil']
+    prediction = Testing.query.join(Hasil, Testing.id == Hasil.id_alumni).add_columns(Testing.id, Testing.tipe_sekolah,
+                                                                                      Testing.gender,
+                                                                                      Testing.kota_sekolah,
+                                                                                      Testing.gaji_ortu,
+                                                                                      Testing.semester_1,
+                                                                                      Testing.semester_2,
+                                                                                      Testing.semester_3,
+                                                                                      Testing.semester_4, Testing.ipk,
+                                                                                      Hasil.result).all()
     df = pd.DataFrame(prediction)
     # create empty data frame with columns for DataFrame.to_html()
     if df.empty and not id:

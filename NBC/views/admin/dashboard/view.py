@@ -9,25 +9,23 @@ import matplotlib
 matplotlib.use('agg')
 
 import matplotlib.pyplot as plt
-from scipy.interpolate import spline
 from flask import render_template, request, redirect, url_for, flash
-from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.model_selection import KFold
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_curve, auc
 from scipy import interp
 from flask_login import login_required
 
 from . import dashboard
-from NBC.views.models.testing import Testing
-from NBC.views.models.training import Training
-from NBC.views.service.alumni_service import get_all_alumni
-from NBC.views.service.mahasiswa_service import get_all_mahasiswa
-from NBC.views.service.prediction_service import train_test_target_split, get_all_prediction_result, \
+from NBC.models.testing import Testing
+from NBC.models.training import Training
+from NBC.service.alumni_service import get_all_alumni
+from NBC.service.prediction_service import train_test_target_split, get_all_prediction_result, \
     pd_concat_row, get_a_prediction
-from NBC.views.service.training_service import delete_all_training
-from NBC.views.service.user_service import get_all_users
-from NBC.views.service.database_service import save_to_db
-from NBC.views.models.user import User
+from NBC.service.training_service import delete_all_training
+from NBC.service.user_service import get_all_users
+from NBC.service.database_service import save_to_db
+from NBC.models.user import User
 
 
 @dashboard.route('/')
@@ -50,7 +48,7 @@ def users():
 @login_required
 def alumni():
     alumni = get_all_alumni()
-    alumni.columns = ['Nama', 'TS', 'KS', 'JK', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Keterangan']
+    alumni.columns = ['NIM', 'TS', 'JK', 'KS', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Keterangan']
     alumni_to_html = alumni.to_html(
         classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0
     )
@@ -61,9 +59,9 @@ def alumni():
 @dashboard.route('/mahasiswa', methods=["GET", "POST"])
 @login_required
 def mahasiswa():
-    mahasiswa = get_all_mahasiswa()
+    mahasiswa = get_all_alumni()
     if request.method == "POST":
-        mahasiswa = get_all_mahasiswa(id=True)
+        mahasiswa = get_all_alumni(id=True)
         alumni = get_all_alumni()
         # concat the data without column id in each mahasiswa and alumni
         con = pd_concat_row(alumni, mahasiswa.drop('id', axis=1)).fillna(0)
