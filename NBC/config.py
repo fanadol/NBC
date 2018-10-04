@@ -6,7 +6,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ['NBC_KEY']
     DEBUG = True
-    UPLOAD_FOLDER = os.path.dirname(os.path.dirname(__file__))
+    ROOT_DIRECTORY = os.path.dirname(os.path.dirname(__file__))
     ALLOWED_EXTENSION = ['csv']
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:jankenpo@localhost:5432/nbc'
 

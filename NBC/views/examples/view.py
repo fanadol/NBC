@@ -2,14 +2,17 @@ import csv
 import pandas as pd
 import numpy as np
 import os
+from pathlib import Path
 from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import MultinomialNB, GaussianNB
 from flask import render_template, request
 
+from NBC.config import Config
 from . import examples
 from NBC.service.prediction_service import pd_concat_row_csv, train_test_target_split
 from NBC.service.utils_service import allowed_file, clean_train_column, clean_train_school_type, clean_train_with_mean, \
-    clean_train_with_median, clean_train_reorder_column
+    clean_train_with_median, clean_train_reorder_column, clean_train_discret_salary, clean_train_school_city, \
+    clean_train_ipk, clean_train_discretization
 
 
 @examples.route('/predict_golf', methods=["GET"])
@@ -150,11 +153,20 @@ def ptest_multi():
 @examples.route('/csv_maker', methods=["GET", "POST"])
 def csv_maker():
     if request.method == "POST":
-        df = pd.read_csv('/Data Penelitian - Sheet2.csv')
-        df = clean_train_column(df)
+        path = Config.ROOT_DIRECTORY
+        file = os.path.join(path, "Data Penelitian - Sheet3.csv")
+        df = clean_train_column(file)
         df['Asal Sekolah'] = clean_train_school_type(df['Asal Sekolah'])
-        df['Gaji Orang Tua'] = clean_train_with_mean(df['Gaji Orang Tua'])
+        df['Gaji Orang Tua'] = clean_train_discret_salary(df['Gaji Orang Tua'])
+        df['Gaji Orang Tua'] = clean_train_with_median(df['Gaji Orang Tua'])
         df = clean_train_reorder_column(df)
-        df.to_csv('Data Result.csv', encoding='utf-8')
+        df['Kota Sekolah'] = clean_train_school_city(df['Kota Sekolah'])
+        df = clean_train_ipk(df)
+        df = clean_train_discretization(df)
+        df['Gaji Orang Tua'] = df['Gaji Orang Tua'].astype(str)
+        df['Gaji Orang Tua'] = df['Gaji Orang Tua'].replace(['1', '2', '3', '4', '5', '6'],
+                                                            ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi',
+                                                             'Tinggi', 'Sangat Tinggi'])
+        df.to_csv('Data Result - Sheet3.csv', encoding='utf-8', index=False)
         return render_template('csv_maker.html')
     return render_template('csv_maker.html')

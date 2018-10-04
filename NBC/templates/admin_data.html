@@ -16,11 +16,11 @@ Dashboard
                     </div>
                     <div class="col-xs-9 text-right">
                         <div class="huge">26</div>
-                        <div>Data Mahasiswa</div>
+                        <div>Data Alumni</div>
                     </div>
                 </div>
             </div>
-            <a href="{{ url_for('dashboard.mahasiswa') }}">
+            <a href="{{ url_for('dashboard.alumni') }}">
                 <div class="panel-footer">
                     <span class="pull-left">View Details</span>
                     <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -42,7 +42,7 @@ Dashboard
                     </div>
                 </div>
             </div>
-            <a href="{{ url_for('dashboard.alumni') }}">
+            <a href="{{ url_for('dashboard.training') }}">
                 <div class="panel-footer">
                     <span class="pull-left">View Details</span>
                     <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -82,7 +82,7 @@ Dashboard
                     </div>
                     <div class="col-xs-9 text-right">
                         <div class="huge">13</div>
-                        <div>Prediksi</div>
+                        <div>Data Uji</div>
                     </div>
                 </div>
             </div>
@@ -151,6 +151,28 @@ Dashboard
         <!-- /.panel -->
     </div>
     <!-- /.col-lg-6 -->
+    {% if object == 'Alumni' %}
+    <div class="col-lg-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Upload CSV
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <p>Upload file csv untuk menambahkan data alumni dengan header:</p>
+                <pre>NIM|Asal Sekolah|Gender|Kota Sekolah|Gaji Orang Tua|Keterangan Lulus|IPS_1|IPS_2|IPS_3|IPS_4|IPK|</pre>
+                <form action="" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file">
+                    <br>
+                    <button class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-6 -->
+    {% endif %}
 </div>
 <!-- /.row -->
 {% endblock %}

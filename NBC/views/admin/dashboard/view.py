@@ -1,14 +1,11 @@
 import datetime
 import os
-import uuid
-
+import time
 import numpy as np
 import pandas as pd
 import matplotlib
+from werkzeug.utils import secure_filename
 
-matplotlib.use('agg')
-
-import matplotlib.pyplot as plt
 from flask import render_template, request, redirect, url_for, flash
 from sklearn.model_selection import KFold
 from sklearn.naive_bayes import MultinomialNB
@@ -16,6 +13,8 @@ from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_
 from scipy import interp
 from flask_login import login_required
 
+from NBC.models.alumni import Alumni
+from NBC.models.nilai import Nilai
 from . import dashboard
 from NBC.models.testing import Testing
 from NBC.models.training import Training
@@ -26,12 +25,19 @@ from NBC.service.training_service import delete_all_training
 from NBC.service.user_service import get_all_users
 from NBC.service.database_service import save_to_db
 from NBC.models.user import User
+from NBC.config import Config
+from NBC.service.utils_service import allowed_file
+
+matplotlib.use('agg')
+
+import matplotlib.pyplot as plt
+
 
 
 @dashboard.route('/')
 @login_required
 def index():
-    return redirect(url_for('dashboard.mahasiswa'))
+    return redirect(url_for('dashboard.alumni'))
 
 
 @dashboard.route('/users', methods=["GET", "POST"])
@@ -44,21 +50,72 @@ def users():
     return render_template('admin_data.html', data=styled_table, object='User')
 
 
-@dashboard.route('/alumni', methods=["GET"])
+@dashboard.route('/alumni', methods=["GET", "POST"])
 @login_required
 def alumni():
-    alumni = get_all_alumni()
-    alumni.columns = ['NIM', 'TS', 'JK', 'KS', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Keterangan']
+    alumni = get_all_alumni(id=True)
+    alumni.columns = ['NIM', 'TS', 'JK', 'KS', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Ket']
     alumni_to_html = alumni.to_html(
         classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0
     )
     styled_table = alumni_to_html.replace('<table ', '<table style="width:100%" ')
+    # POST METHOD
+    if request.method == "POST":
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No File Choosen', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No File Choosen', 'danger')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            try:
+                timestr = time.strftime("%Y%m%d")
+                filename = timestr + "_" + secure_filename(file.filename)
+                path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", filename)
+                file.save(path)
+                csv = pd.read_csv(path)
+                for index, row in csv.iterrows():
+                    data_alumni = Alumni(
+                        id=row['NIM'],
+                        school_type=row['Asal Sekolah'],
+                        gender=row['Gender'],
+                        school_city=row['Kota Sekolah'],
+                        parent_salary=row['Gaji Orang Tua'],
+                        ket_lulus=row['Keterangan Lulus']
+                    )
+                    data_nilai = Nilai(
+                        id_alumni=row['NIM'],
+                        semester_1=row['IPS_1'],
+                        semester_2=row['IPS_2'],
+                        semester_3=row['IPS_3'],
+                        semester_4=row['IPS_4'],
+                        ipk=row['IPK']
+                    )
+                    # check if the data already exist
+                    exst = Alumni.query.filter_by(id=row['NIM']).first()
+                    if not exst:
+                        save_to_db(data_alumni)
+                        save_to_db(data_nilai)
+                    else:
+                        pass
+                flash('Successfully add alumni data', 'success')
+                return redirect(request.url)
+            except Exception as e:
+                flash('Error: {}'.format(e), 'danger')
+                return redirect(request.url)
+        else:
+            flash('Invalid file extension!', 'danger')
+            return redirect(request.url)
     return render_template('admin_data.html', data=styled_table, object='Alumni')
 
 
-@dashboard.route('/mahasiswa', methods=["GET", "POST"])
+@dashboard.route('/training', methods=["GET", "POST"])
 @login_required
-def mahasiswa():
+def training():
     mahasiswa = get_all_alumni()
     if request.method == "POST":
         mahasiswa = get_all_alumni(id=True)
@@ -133,7 +190,6 @@ def create_user():
         else:
             role = False
         data = User(
-            public_id=str(uuid.uuid4()),
             email=email,
             password=password,
             first_name=first_name,
