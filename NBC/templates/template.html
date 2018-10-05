@@ -80,7 +80,19 @@
                         <a href="{{ url_for('dashboard.build') }}"><i class="fa  fa-bar-chart-o fa-fw"></i> Model Build</a>
                     </li>
                     <li>
-                        <a href="{{ url_for('dashboard.create_user') }}"><i class="fa  fa-bar-chart-o fa-fw"></i> Create</a>
+                        <a href="{{ url_for('dashboard.create_user') }}"><i class="fa  fa-users fa-fw"></i> Create</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fa fa-flask fa-fw"></i> Prediksi<span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level">
+                            <li>
+                                <a href="admin_prediksi_single.html">Single Data</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('dashboard.predict_csv') }}">CSV</a>
+                            </li>
+                        </ul>
+                        <!-- /.nav-second-level -->
                     </li>
                 </ul>
             </div>
@@ -135,6 +147,7 @@
             responsive: true
         });
     });
+
 
 
 

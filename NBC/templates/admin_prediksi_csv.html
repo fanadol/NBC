@@ -1,0 +1,36 @@
+{% extends 'template.html' %}
+
+{% block title %}
+Upload Prediksi
+{% endblock %}
+
+{% block subtitle %}
+Prediksi
+{% endblock %}
+
+{% block content %}
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Upload CSV
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <p>Format untuk prediksi menggunakan csv menggunakan header:</p>
+                <pre>NIM|Tipe Sekolah|Gender|Kota Sekolah|Gaji Orang Tua|IPS_1|IPS_2|IPS_3|IPS_4|IPK|</pre>
+                <form action="" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file">
+                    <br>
+                    <button class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->
+{% endblock %}

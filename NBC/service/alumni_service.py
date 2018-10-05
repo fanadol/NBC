@@ -11,8 +11,9 @@ def get_all_alumni(id=False):
     determine whether need id column or not
     :return pandas.DataFrame without Object Alumni, and id column:
     """
-    id_feature = ['NIM']
-    selected_features = ['TS', 'JK', 'KS', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Ket']
+    id_feature = ['id']
+    selected_features = ['school_type', 'gender', 'school_city', 'parent_salary', 'semester_1', 'semester_2',
+                         'semester_3', 'semester_4', 'ipk', 'ket_lulus']
     alumni = Alumni.query.join(Nilai, Alumni.id == Nilai.id_alumni) \
         .add_columns(Alumni.id, Alumni.school_type, Alumni.gender, Alumni.school_city,
                      Alumni.parent_salary, Nilai.semester_1, Nilai.semester_2, Nilai.semester_3,
@@ -26,6 +27,6 @@ def get_all_alumni(id=False):
     # if data frame not empty
     else:
         if not id:
-            return df.drop(['Alumni', 'id'], axis=1)
+            return df[selected_features]
         else:
-            return df.drop(['Alumni'], axis=1)
+            return df[id_feature + selected_features]

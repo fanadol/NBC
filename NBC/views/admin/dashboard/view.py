@@ -14,14 +14,14 @@ from scipy import interp
 from flask_login import login_required
 
 from NBC.models.alumni import Alumni
+from NBC.models.hasil import Hasil
 from NBC.models.nilai import Nilai
 from . import dashboard
 from NBC.models.testing import Testing
 from NBC.models.training import Training
 from NBC.service.alumni_service import get_all_alumni
-from NBC.service.prediction_service import train_test_target_split, get_all_prediction_result, \
-    pd_concat_row, get_a_prediction
-from NBC.service.training_service import delete_all_training
+from NBC.service.prediction_service import get_all_prediction_result, delete_all_prediction
+from NBC.service.training_service import delete_all_training, get_all_training
 from NBC.service.user_service import get_all_users
 from NBC.service.database_service import save_to_db
 from NBC.models.user import User
@@ -31,7 +31,6 @@ from NBC.service.utils_service import allowed_file
 matplotlib.use('agg')
 
 import matplotlib.pyplot as plt
-
 
 
 @dashboard.route('/')
@@ -81,7 +80,7 @@ def alumni():
                 for index, row in csv.iterrows():
                     data_alumni = Alumni(
                         id=row['NIM'],
-                        school_type=row['Asal Sekolah'],
+                        school_type=row['Tipe Sekolah'],
                         gender=row['Gender'],
                         school_city=row['Kota Sekolah'],
                         parent_salary=row['Gaji Orang Tua'],
@@ -102,7 +101,7 @@ def alumni():
                         save_to_db(data_nilai)
                     else:
                         pass
-                flash('Successfully add alumni data', 'success')
+                flash('Successfully menambahkan data alumni', 'success')
                 return redirect(request.url)
             except Exception as e:
                 flash('Error: {}'.format(e), 'danger')
@@ -116,40 +115,11 @@ def alumni():
 @dashboard.route('/training', methods=["GET", "POST"])
 @login_required
 def training():
-    mahasiswa = get_all_alumni()
-    if request.method == "POST":
-        mahasiswa = get_all_alumni(id=True)
-        alumni = get_all_alumni()
-        # concat the data without column id in each mahasiswa and alumni
-        con = pd_concat_row(alumni, mahasiswa.drop('id', axis=1)).fillna(0)
-        # one hot encoder, axis 1 mean column
-        enc = pd.get_dummies(con).astype(int)
-        # split the x, y, and target
-        x, y, target = train_test_target_split(enc)
-        # create the model
-        model = MultinomialNB()
-        # predict the 10th data from dataset for testing purpose
-        model.fit(x, y)
-        pred = model.predict(target)
-        # change the predict from number to string
-        df = pd.DataFrame(pred, columns='hasil')
-        df['hasil'] = df['hasil'].replace([0, 1], ['Tidak Tepat Waktu', 'Tepat Waktu'])
-        # insert the result to database
-        i = 0
-        for id in mahasiswa['id'].values:
-            existing_mahasiswa = get_a_prediction(int(id))
-            if not existing_mahasiswa:
-                data = Testing(
-                    id_mahasiswa=int(id),
-                    hasil=df['hasil'].iloc[i]
-                )
-                save_to_db(data)
-            i += 1
-        return redirect(url_for('dashboard.predict'))
-    mahasiswa.columns = ['Nama', 'TS', 'KS', 'JK', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK']
-    mahasiswa_to_html = mahasiswa.to_html(
+    training_data = get_all_training()
+    training_data.columns = ['NIM', 'TS', 'KS', 'JK', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Ket']
+    training_to_html = training_data.to_html(
         classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0)
-    styled_table = mahasiswa_to_html.replace('<table ', '<table style="width:100%" ')
+    styled_table = training_to_html.replace('<table ', '<table style="width:100%" ')
     return render_template('admin_data.html', data=styled_table, object='Mahasiswa')
 
 
@@ -157,11 +127,106 @@ def training():
 @login_required
 def predict():
     result = get_all_prediction_result()
-    result.columns = ['Nama', 'TS', 'KS', 'JK', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Hasil']
+    if request.method == "POST":
+        delete_all_prediction()
+        flash('Data telah berhasil di delete', 'success')
+        return redirect(request.url)
+    result.columns = ['NIM', 'TS', 'JK', 'KS', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Hasil']
     result_to_html = result.to_html(
         classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0)
     styled_table = result_to_html.replace('<table ', '<table style="width:100%" ')
     return render_template('admin_data.html', data=styled_table, object='Prediksi')
+
+
+@dashboard.route('/prediction/csv', methods=["GET", "POST"])
+@login_required
+def predict_csv():
+    train = get_all_alumni()
+    if request.method == "POST":
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No File Choosen', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No File Choosen', 'danger')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            try:
+                timestr = time.strftime("%Y%m%d")
+                filename = timestr + "_" + secure_filename(file.filename)
+                path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "prediksi", filename)
+                file.save(path)
+                csv = pd.read_csv(path)
+                # make list of dict
+                pred_list = []
+                for index, row in csv.iterrows():
+                    pred_list.append({
+                        'id': row['NIM'],
+                        'school_type': row['Tipe Sekolah'],
+                        'gender': row['Gender'],
+                        'school_city': row['Kota Sekolah'],
+                        'parent_salary': row['Gaji Orang Tua'],
+                        'semester_1': row['IPS_1'],
+                        'semester_2': row['IPS_2'],
+                        'semester_3': row['IPS_3'],
+                        'semester_4': row['IPS_4'],
+                        'ipk': row['IPK']
+                    })
+                selected_features = ['school_type', 'gender', 'school_city', 'parent_salary', 'semester_1',
+                                     'semester_2', 'semester_3', 'semester_4', 'ipk']
+                data_test = pd.DataFrame(pred_list)
+                data_target = data_test[selected_features]
+                train['ket_lulus'] = train['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
+                df_concat = pd.concat([train, data_target], keys=['train', 'test'], sort=True).fillna(0)
+                df_concat['ket_lulus'] = df_concat['ket_lulus'].astype(int)
+                enc = pd.get_dummies(df_concat)
+                x = enc.loc['train'].drop('ket_lulus', axis=1)
+                y = enc.loc['train']['ket_lulus']
+                target = enc.loc['test'].drop('ket_lulus', axis=1)
+                model = MultinomialNB()
+                model.fit(x, y)
+                y_pred = model.predict(target)
+                # make data frame from y pred
+                y_pred = pd.DataFrame(y_pred, columns=['result'])
+                y_pred['result'] = y_pred['result'].replace([0, 1], ['Tidak Tepat Waktu', 'Tepat Waktu'])
+                # insert into database
+                # combine the result and the data
+                dfr = pd.concat([data_test, y_pred], axis=1, sort=True)
+                for i, row in dfr.iterrows():
+                    exst = Testing.query.filter_by(id=row['id']).first()
+                    if exst:
+                        flash('ID terduplikasi, silahkan kosongkan tabel prediksi terlebih dahulu', 'danger')
+                        return redirect(request.url)
+                    obj_testing = Testing(
+                        id=row['id'],
+                        school_type=row['school_type'],
+                        gender=row['gender'],
+                        school_city=row['school_city'],
+                        parent_salary=row['parent_salary'],
+                        semester_1=row['semester_1'],
+                        semester_2=row['semester_2'],
+                        semester_3=row['semester_3'],
+                        semester_4=row['semester_4'],
+                        ipk=row['ipk']
+                    )
+                    obj_hasil = Hasil(
+                        id_testing=row['id'],
+                        result=row['result']
+                    )
+                    save_to_db(obj_testing)
+                    save_to_db(obj_hasil)
+                flash('Prediksi Berhasil', 'success')
+                return redirect(url_for('dashboard.predict'))
+            except Exception as e:
+                flash('Error: {}'.format(e), 'danger')
+                return redirect(request.url)
+        else:
+            flash('Invalid file extension!', 'danger')
+            return redirect(request.url)
+    return render_template('admin_prediksi_csv.html')
 
 
 @dashboard.route('/build', methods=["GET"])
@@ -212,22 +277,32 @@ def cross_validation():
     # if create model button is clicked
     if request.method == "POST":
         delete_all_training()
-        for id in alumni['id'].values:
+        for i, row in alumni.iterrows():
             data = Training(
-                id_alumni=int(id)
+                nim=row['id'],
+                school_type=row['school_type'],
+                gender=row['gender'],
+                school_city=row['school_city'],
+                parent_salary=row['parent_salary'],
+                semester_1=row['semester_1'],
+                semester_2=row['semester_2'],
+                semester_3=row['semester_3'],
+                semester_4=row['semester_4'],
+                ipk=row['ipk'],
+                ket_lulus=row['ket_lulus']
             )
             save_to_db(data)
         flash('Successfully create a model', 'success')
         return redirect(url_for('dashboard.index'))
     # one hot encoder
-    alumni['keterangan_lulus'] = alumni['keterangan_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-    enc = pd.get_dummies(alumni.drop(['id', 'name'], axis=1))
-    x = np.array(enc.drop('keterangan_lulus', axis=1))
-    y = np.array(enc['keterangan_lulus'])
+    alumni['ket_lulus'] = alumni['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
+    enc = pd.get_dummies(alumni.drop(['id'], axis=1))
+    x = np.array(enc.drop('ket_lulus', axis=1))
+    y = np.array(enc['ket_lulus'])
     # create the model
     model = MultinomialNB()
     # cross validation
-    sf = KFold(n_splits=10)
+    kf = KFold(n_splits=10)
     cf = np.array([[0, 0], [0, 0]])
     f1 = []
     recall = []
@@ -241,23 +316,23 @@ def cross_validation():
     mean_fpr = np.linspace(0, 1, 100)
     plt.figure(figsize=(15, 10))
     i = 0
-    for train_index, test_index in sf.split(x, y):
+    for train_index, test_index in kf.split(x):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # fit the model, then predict the test fold
-        print("TRAIN: ", train_index, "TEST: ", test_index)
+        # print("TRAIN: ", train_index, "TEST: ", test_index)
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         y_prob = model.predict_proba(x_test)[:, 1]
-        print("Y Test: {}".format(y_test))
-        print("Y Prob: {}".format(y_prob))
+        # print("Y Test: {}".format(y_test))
+        # print("Y Prob: {}".format(y_prob))
         # compute confusion matrix, ROC curve and AUC
         cf += confusion_matrix(y_test, y_pred)
         fpr, tpr, thresholds = roc_curve(y_test, y_prob)
-        print("Unique y test: {}".format(pd.Series(y_test).unique()))
-        print("Unique y prob: {}".format(pd.Series(y_prob).unique()))
-        print("FPR: {}".format(fpr))
-        print("Threshold: {}".format(thresholds))
+        # print("Unique y test: {}".format(pd.Series(y_test).unique()))
+        # print("Unique y prob: {}".format(pd.Series(y_prob).unique()))
+        # print("FPR: {}".format(fpr))
+        # print("Threshold: {}".format(thresholds))
         # y_smooth = spline(fpr, tpr, mean_fpr)
         tprs.append(interp(mean_fpr, fpr, tpr))
         tprs[-1][0] = 0.0
@@ -275,8 +350,6 @@ def cross_validation():
         score = model.score(x_test, y_test)
         scores.append(score)
         i += 1
-    # loop above is same as cv = cross_val_score(model, x, y, cv=10)
-    # print("tprs: {}".format(tprs))
     # put all scores inside a dict
     items = []
     for i in range(len(scores)):
@@ -288,7 +361,7 @@ def cross_validation():
                     avg_recall=np.average(recall), avg_score=np.average(scores))]
 
     # plot the ROC Curve, then save it into image file
-    plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', label='Luck', alpha=.8)
+    plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', alpha=.8)
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1
     # mean of the auc (from mean false positive rate and mean true positive rate)
@@ -302,7 +375,6 @@ def cross_validation():
     tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
     tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
     # plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2, label=r'$\pm$ 1 std.dev.')
-
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
     plt.xlabel('False Positive Rate')

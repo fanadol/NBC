@@ -8,7 +8,7 @@ def clean_train_column(filename):
     Make data frame from csv file. Suit the column with what we need for making alumni table
     Also, change th column name so its readable
     """
-    col_names = ['NIM', 'Gender', 'Asal Sekolah', 'Kota Sekolah', 'Tanggal Lulus', 'Lama Studi', 'Keterangan Lulus',
+    col_names = ['NIM', 'Gender', 'Tipe Sekolah', 'Kota Sekolah', 'Tanggal Lulus', 'Lama Studi', 'Keterangan Lulus',
                  'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4', 'Gaji Orang Tua']
     df = pd.read_csv(filename, names=col_names, skiprows=1)
     return df.drop(['Tanggal Lulus', 'Lama Studi'], axis=1)
@@ -66,7 +66,7 @@ def clean_train_reorder_column(df):
     :param df:
     :return:
     """
-    features_alumni = ['NIM', 'Asal Sekolah', 'Gender', 'Kota Sekolah', 'Gaji Orang Tua', 'Keterangan Lulus',
+    features_alumni = ['NIM', 'Tipe Sekolah', 'Gender', 'Kota Sekolah', 'Gaji Orang Tua', 'Keterangan Lulus',
                        'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4']
     return df[features_alumni]
 

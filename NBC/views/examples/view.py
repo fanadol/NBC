@@ -156,7 +156,7 @@ def csv_maker():
         path = Config.ROOT_DIRECTORY
         file = os.path.join(path, "Data Penelitian - Sheet3.csv")
         df = clean_train_column(file)
-        df['Asal Sekolah'] = clean_train_school_type(df['Asal Sekolah'])
+        df['Tipe Sekolah'] = clean_train_school_type(df['Tipe Sekolah'])
         df['Gaji Orang Tua'] = clean_train_discret_salary(df['Gaji Orang Tua'])
         df['Gaji Orang Tua'] = clean_train_with_median(df['Gaji Orang Tua'])
         df = clean_train_reorder_column(df)
