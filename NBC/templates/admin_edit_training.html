@@ -1,0 +1,160 @@
+{% extends 'template.html' %}
+
+{% block subtitle %}
+Edit Data Latih
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                User Form
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <form action="" method="post">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <!--<div class="form-group">-->
+                            <!--<label for="id">NIM</label>-->
+                            <!--<input type="text" class="form-control" name="id" id="id" placeholder="NIM"-->
+                            <!--aria-describedby="nimHelp" value="{{ latih.id }}">-->
+                            <!--<small id="nimHelp" class="form-text text-muted">NIM</small>-->
+                            <!--</div>-->
+                            <div class="form-group">
+                                <label for="tipesekolah">Tipe Sekolah</label>
+                                <select name="school_type" id="tipesekolah" class="form-control">
+                                    {% if latih.school_type == 'SMA'%}
+                                    <option value="SMA" selected>SMA</option>
+                                    <option value="SMK">SMK</option>
+                                    {% else %}
+                                    <option value="SMA">SMA</option>
+                                    <option value="SMK" selected>SMK</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="jeniskelamin">Jenis Kelamin</label>
+                                <select name="gender" id="jeniskelamin" class="form-control">
+                                    {% if latih.gender == 'L'%}
+                                    <option value="L" selected>L</option>
+                                    <option value="P">P</option>
+                                    {% else %}
+                                    <option value="L">L</option>
+                                    <option value="P" selected>P</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="kotasekolah">Kota Sekolah</label>
+                                <select name="school_city" id="kotasekolah" class="form-control">
+                                    {% if latih.school_city == 'Dalam Kota'%}
+                                    <option value="Dalam Kota" selected>Dalam Kota</option>
+                                    <option value="Luar Kota">Luar Kota</option>
+                                    {% else %}
+                                    <option value="Dalam Kota">Dalam Kota</option>
+                                    <option value="Luar Kota" selected>Luar Kota</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="gajiorangtua">Gaji Orang Tua</label>
+                                <select name="parent_salary" id="gajiorangtua" class="form-control">
+                                    {% for val in ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi', 'Tinggi',
+                                    'Sangat Tinggi'] %}
+                                    {% if latih.parent_salary == val %}
+                                    <option value="{{val}}" selected>{{val}}</option>
+                                    {% else %}
+                                    <option value="{{val}}">{{val}}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ips1">IP Semester 1</label>
+                                <select name="semester_1" id="ips1" class="form-control">
+                                    {% for val in ['A', 'B', 'C', 'D', 'E'] %}
+                                    {% if latih.semester_1 == val %}
+                                    <option value="{{val}}" selected>{{val}}</option>
+                                    {% else %}
+                                    <option value="{{val}}">{{val}}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ips2">IP Semester 2</label>
+                                <select name="semester_2" id="ips2" class="form-control">
+                                    {% for val in ['A', 'B', 'C', 'D', 'E'] %}
+                                    {% if latih.semester_2 == val %}
+                                    <option value="{{val}}" selected>{{val}}</option>
+                                    {% else %}
+                                    <option value="{{val}}">{{val}}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ips3">IP Semester 3</label>
+                                <select name="semester_3" id="ips3" class="form-control">
+                                    {% for val in ['A', 'B', 'C', 'D', 'E'] %}
+                                    {% if latih.semester_3 == val %}
+                                    <option value="{{val}}" selected>{{val}}</option>
+                                    {% else %}
+                                    <option value="{{val}}">{{val}}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ips4">IP Semester 4</label>
+                                <select name="semester_4" id="ips4" class="form-control">
+                                    {% for val in ['A', 'B', 'C', 'D', 'E'] %}
+                                    {% if latih.semester_4 == val %}
+                                    <option value="{{val}}" selected>{{val}}</option>
+                                    {% else %}
+                                    <option value="{{val}}">{{val}}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ipk">IPK</label>
+                                <select name="ipk" id="ipk" class="form-control">
+                                    {% for val in ['A', 'B', 'C', 'D', 'E'] %}
+                                    {% if latih.ipk == val %}
+                                    <option value="{{val}}" selected>{{val}}</option>
+                                    {% else %}
+                                    <option value="{{val}}">{{val}}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="keteranganlulus">Keterangan Lulus</label>
+                                <select name="ket_lulus" id="keteranganlulus" class="form-control">
+                                    {% if latih.ket_lulus == 'Tidak Tepat Waktu' %}
+                                    <option value="Tidak Tepat Waktu" selected>Tidak Tepat Waktu</option>
+                                    <option value="Tepat Waktu">Tepat Waktu</option>
+                                    {% else %}
+                                    <option value="Tidak Tepat Waktu" selected>Tidak Tepat Waktu</option>
+                                    <option value="Tepat Waktu" selected>Tepat Waktu</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </form>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-6 -->
+</div>
+<!-- /.row -->
+{% endblock %}

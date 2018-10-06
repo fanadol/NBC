@@ -1,7 +1,12 @@
 import pandas as pd
 
+from NBC import db
 from NBC.models.alumni import Alumni
 from NBC.models.nilai import Nilai
+
+
+def get_an_alumni(id):
+    return Alumni.query.filter_by(id=id).first()
 
 
 def get_all_alumni(id=False):
@@ -30,3 +35,13 @@ def get_all_alumni(id=False):
             return df[selected_features]
         else:
             return df[id_feature + selected_features]
+
+
+def update_an_alumni(obj, updatedObj):
+    # obj.id = updatedObj['id']
+    obj.school_type = updatedObj['school_type']
+    obj.gender = updatedObj['gender']
+    obj.school_city = updatedObj['school_city']
+    obj.parent_salary = updatedObj['parent_salary']
+    obj.ket_lulus = updatedObj['ket_lulus']
+    db.session.commit()

@@ -16,13 +16,14 @@ from flask_login import login_required
 from NBC.models.alumni import Alumni
 from NBC.models.hasil import Hasil
 from NBC.models.nilai import Nilai
+from NBC.service.nilai_service import get_a_nilai, update_a_nilai
 from . import dashboard
 from NBC.models.testing import Testing
 from NBC.models.training import Training
-from NBC.service.alumni_service import get_all_alumni
+from NBC.service.alumni_service import get_all_alumni, get_an_alumni, update_an_alumni
 from NBC.service.prediction_service import get_all_prediction_result, delete_all_prediction
-from NBC.service.training_service import delete_all_training, get_all_training
-from NBC.service.user_service import get_all_users
+from NBC.service.training_service import delete_all_training, get_all_training, get_a_training, update_a_training
+from NBC.service.user_service import get_all_users, get_an_user, update_an_user
 from NBC.service.database_service import save_to_db
 from NBC.models.user import User
 from NBC.config import Config
@@ -42,22 +43,74 @@ def index():
 @dashboard.route('/users', methods=["GET", "POST"])
 @login_required
 def users():
-    users = get_all_users()
-    users_to_html = users.to_html(
-        classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0)
-    styled_table = users_to_html.replace('<table ', '<table style="width:100%" ')
-    return render_template('admin_data.html', data=styled_table, object='User')
+    users = get_all_users(id=True)
+    return render_template('admin_data_users.html', data=users)
+
+
+@dashboard.route('/create_user', methods=["GET", "POST"])
+def create_user():
+    if request.method == "POST":
+        email = request.form.get('email')
+        password = request.form.get('password')
+        first_name = request.form.get('firstname')
+        last_name = request.form.get('lastname')
+        phone = request.form.get('phone')
+        role = request.form.get('role')
+        if not email or not password or not first_name or not last_name:
+            flash('Please fill all form!', 'danger')
+            return redirect(url_for('dashboard.create_user'))
+        if phone:
+            phone = '+62' + phone
+        data = User(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            registered_on=datetime.datetime.utcnow(),
+            phone_number=phone,
+            role=role
+        )
+        save_to_db(data)
+        flash('User successfully created', 'success')
+        return redirect(url_for('dashboard.create_user'))
+    return render_template('admin_create_user.html')
+
+
+@dashboard.route('/user/<id>', methods=["GET", "POST"])
+@login_required
+def edit_user(id):
+    user = get_an_user(id)
+    if request.method == "POST":
+        try:
+            email = request.form.get('email')
+            first_name = request.form.get('firstname')
+            last_name = request.form.get('lastname')
+            phone = request.form.get('phone')
+            role = request.form.get('role')
+            if not email or not first_name or not last_name or not phone:
+                flash('Fill all empty form', 'danger')
+                return redirect(request.url)
+            updated_user = {
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name,
+                'registered_on': datetime.datetime.utcnow(),
+                'phone_number': phone,
+                'admin': role
+            }
+            update_an_user(user, updated_user)
+            flash('User berhasil di edit.', 'success')
+            return redirect(url_for('dashboard.users'))
+        except Exception as e:
+            flash('Error: {}'.format(e), 'danger')
+            return redirect(request.url)
+    return render_template('admin_edit_user.html', user=user)
 
 
 @dashboard.route('/alumni', methods=["GET", "POST"])
 @login_required
 def alumni():
     alumni = get_all_alumni(id=True)
-    alumni.columns = ['NIM', 'TS', 'JK', 'KS', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Ket']
-    alumni_to_html = alumni.to_html(
-        classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0
-    )
-    styled_table = alumni_to_html.replace('<table ', '<table style="width:100%" ')
     # POST METHOD
     if request.method == "POST":
         # check if the post request has the file part
@@ -109,36 +162,90 @@ def alumni():
         else:
             flash('Invalid file extension!', 'danger')
             return redirect(request.url)
-    return render_template('admin_data.html', data=styled_table, object='Alumni')
+    return render_template('admin_data_alumni.html', data=alumni)
+
+
+@dashboard.route('/alumni/<id>', methods=["GET", "POST"])
+@login_required
+def edit_alumni(id):
+    al = get_an_alumni(id)
+    ni = get_a_nilai(id)
+    if request.method == "POST":
+        try:
+            # if not request.form.get('id'):
+            #     flash('Fill all empty form!', 'danger')
+            #     return redirect(request.url)
+            updated_alumni = {
+                # 'id': request.form.get('id'),
+                'school_type': request.form.get('school_type'),
+                'gender': request.form.get('gender'),
+                'school_city': request.form.get('school_city'),
+                'parent_salary': request.form.get('parent_salary'),
+                'ket_lulus': request.form.get('ket_lulus')
+            }
+            updated_nilai = {
+                'semester_1': request.form.get('semester_1'),
+                'semester_2': request.form.get('semester_2'),
+                'semester_3': request.form.get('semester_3'),
+                'semester_4': request.form.get('semester_4'),
+                'ipk': request.form.get('ipk')
+            }
+            update_a_nilai(ni, updated_nilai)
+            update_an_alumni(al, updated_alumni)
+            return redirect(url_for('dashboard.alumni'))
+        except Exception as e:
+            flash('Error: {}'.format(e), 'danger')
+            return redirect(request.url)
+    return render_template('admin_edit_alumni.html', alumni=al, nilai=ni)
 
 
 @dashboard.route('/training', methods=["GET", "POST"])
 @login_required
 def training():
     training_data = get_all_training()
-    training_data.columns = ['NIM', 'TS', 'KS', 'JK', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Ket']
-    training_to_html = training_data.to_html(
-        classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0)
-    styled_table = training_to_html.replace('<table ', '<table style="width:100%" ')
-    return render_template('admin_data.html', data=styled_table, object='Mahasiswa')
+    return render_template('admin_data_training.html', data=training_data)
+
+
+@dashboard.route('/training/<id>', methods=["GET", "POST"])
+@login_required
+def edit_training(id):
+    tr = get_a_training(id)
+    if request.method == "POST":
+        try:
+            updated_training = {
+                # 'id': request.form.get('id'),
+                'school_type': request.form.get('school_type'),
+                'gender': request.form.get('gender'),
+                'school_city': request.form.get('school_city'),
+                'parent_salary': request.form.get('parent_salary'),
+                'ket_lulus': request.form.get('ket_lulus'),
+                'semester_1': request.form.get('semester_1'),
+                'semester_2': request.form.get('semester_2'),
+                'semester_3': request.form.get('semester_3'),
+                'semester_4': request.form.get('semester_4'),
+                'ipk': request.form.get('ipk')
+            }
+            update_a_training(tr, updated_training)
+            flash('Data Training berhasil di edit.', 'success')
+            return redirect(url_for('dashboard.training'))
+        except Exception as e:
+            flash('Error: {}'.format(e), 'danger')
+            return redirect(request.url)
+    return render_template('admin_edit_training.html', latih=tr)
 
 
 @dashboard.route('/prediction', methods=["GET", "POST"])
 @login_required
 def predict():
-    result = get_all_prediction_result()
+    pred_data = get_all_prediction_result()
     if request.method == "POST":
         delete_all_prediction()
         flash('Data telah berhasil di delete', 'success')
         return redirect(request.url)
-    result.columns = ['NIM', 'TS', 'JK', 'KS', 'GO', 'IPS1', 'IPS2', 'IPS3', 'IPS4', 'IPK', 'Hasil']
-    result_to_html = result.to_html(
-        classes='table table-striped table-bordered table-hover', table_id='dataTables-example', index=False, border=0)
-    styled_table = result_to_html.replace('<table ', '<table style="width:100%" ')
-    return render_template('admin_data.html', data=styled_table, object='Prediksi')
+    return render_template('admin_data_predict.html', data=pred_data)
 
 
-@dashboard.route('/prediction/csv', methods=["GET", "POST"])
+@dashboard.route('/prediction_csv', methods=["GET", "POST"])
 @login_required
 def predict_csv():
     train = get_all_alumni()
@@ -233,40 +340,6 @@ def predict_csv():
 @login_required
 def build():
     return render_template('model_building.html')
-
-
-@dashboard.route('/create_user', methods=["GET", "POST"])
-def create_user():
-    if request.method == "POST":
-        email = request.form.get('email')
-        password = request.form.get('password')
-        first_name = request.form.get('firstname')
-        last_name = request.form.get('lastname')
-        phone = request.form.get('phone')
-        role = request.form.get('role')
-        if not email or not password or not first_name or not last_name:
-            flash('Please fill all form!', 'danger')
-            return redirect(url_for('dashboard.create_user'))
-        if phone:
-            phone = '+62' + phone
-        # check if admin, i dont know why its always error if direct pass from HTML
-        if role == 'Admin':
-            role = True
-        else:
-            role = False
-        data = User(
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            registered_on=datetime.datetime.utcnow(),
-            phone_number=phone,
-            admin=role
-        )
-        save_to_db(data)
-        flash('User successfully created', 'success')
-        return redirect(url_for('dashboard.create_user'))
-    return render_template('admin_create_user.html')
 
 
 @dashboard.route('/cross_validation', methods=["GET", "POST"])

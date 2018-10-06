@@ -13,7 +13,7 @@ class User(db.Model, UserMixin):
     last_name = db.Column(db.String(50), nullable=False)
     registered_on = db.Column(db.DateTime, nullable=False)
     phone_number = db.Column(db.String(25))
-    admin = db.Column(db.Boolean, nullable=False, default=False)
+    role = db.Column(db.String(5), nullable=False, default=False)
 
     @property
     def password(self):
