@@ -61,8 +61,7 @@ Edit Data Latih
                             <div class="form-group">
                                 <label for="gajiorangtua">Gaji Orang Tua</label>
                                 <select name="parent_salary" id="gajiorangtua" class="form-control">
-                                    {% for val in ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi', 'Tinggi',
-                                    'Sangat Tinggi'] %}
+                                    {% for val in category %}
                                     {% if latih.parent_salary == val %}
                                     <option value="{{val}}" selected>{{val}}</option>
                                     {% else %}

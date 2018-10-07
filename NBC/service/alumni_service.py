@@ -45,3 +45,9 @@ def update_an_alumni(obj, updatedObj):
     obj.parent_salary = updatedObj['parent_salary']
     obj.ket_lulus = updatedObj['ket_lulus']
     db.session.commit()
+
+
+def delete_an_alumni(id):
+    Nilai.query.filter_by(id_alumni=id).delete()
+    Alumni.query.filter_by(id=id).delete()
+    db.session.commit()

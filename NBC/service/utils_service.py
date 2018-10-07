@@ -1,6 +1,10 @@
 import pandas as pd
 
 from NBC.config import Config
+from NBC.models.alumni import Alumni
+from NBC.models.testing import Testing
+from NBC.models.training import Training
+from NBC.models.user import User
 
 
 def clean_train_column(filename):
@@ -108,3 +112,13 @@ def clean_train_discretization(df):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSION
+
+
+def get_data_length():
+    len_dict = {
+        'len_alumni': len(Alumni.query.all()),
+        'len_users': len(User.query.all()),
+        'len_training': len(Training.query.all()),
+        'len_testing': len(Testing.query.all())
+    }
+    return len_dict

@@ -5,7 +5,6 @@ Dashboard
 {% endblock %}
 
 {% block content %}
-<!-- /.row -->
 <div class="row">
     <div class="col-lg-3 col-md-6">
         <div class="panel panel-primary">
@@ -15,7 +14,7 @@ Dashboard
                         <i class="fa fa-tasks fa-5x"></i>
                     </div>
                     <div class="col-xs-9 text-right">
-                        <div class="huge">26</div>
+                        <div class="huge">{{ len_data['len_alumni'] }}</div>
                         <div>Data Alumni</div>
                     </div>
                 </div>
@@ -37,7 +36,7 @@ Dashboard
                         <i class="fa fa-tasks fa-5x"></i>
                     </div>
                     <div class="col-xs-9 text-right">
-                        <div class="huge">12</div>
+                        <div class="huge">{{ len_data['len_training'] }}</div>
                         <div>Data Latih</div>
                     </div>
                 </div>
@@ -59,7 +58,7 @@ Dashboard
                         <i class="fa fa-tasks fa-5x"></i>
                     </div>
                     <div class="col-xs-9 text-right">
-                        <div class="huge">124</div>
+                        <div class="huge">{{ len_data['len_users'] }}</div>
                         <div>Data User</div>
                     </div>
                 </div>
@@ -81,7 +80,7 @@ Dashboard
                         <i class="fa fa-support fa-5x"></i>
                     </div>
                     <div class="col-xs-9 text-right">
-                        <div class="huge">13</div>
+                        <div class="huge">{{ len_data['len_testing'] }}</div>
                         <div>Data Uji</div>
                     </div>
                 </div>
@@ -136,8 +135,13 @@ Dashboard
                         <td>{{ row['semester_4'] }}</td>
                         <td>{{ row['ipk'] }}</td>
                         <td>{{ row['ket_lulus'] }}</td>
-                        <td><a href="{{ url_for('dashboard.edit_training', id=row['NIM']) }}"
-                               class="btn btn-primary">Edit</a></td>
+                        <td>
+                            <a href="{{ url_for('dashboard.edit_training', id=row['NIM']) }}"
+                               class="btn btn-primary">Edit</a>
+                            <button data-toggle="modal" data-target="#exampleModal" class="btn btn-danger btn-sm"
+                                    data-whatever="{{ row['NIM'] }}">Delete
+                            </button>
+                        </td>
                     </tr>
                     {% endfor %}
                     </tbody>

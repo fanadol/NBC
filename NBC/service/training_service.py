@@ -50,3 +50,8 @@ def update_a_training(obj, updatedObj):
     obj.ipk = updatedObj['ipk']
     obj.ket_lulus = updatedObj['ket_lulus']
     db.session.commit()
+
+
+def delete_a_trainig(id):
+    Training.query.filter_by(nim=id).delete()
+    db.session.commit()

@@ -12,7 +12,7 @@ def login():
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
-            if user.check_admin(user.admin):
+            if user.check_admin(user.role):
                 login_user(user)
                 flash('You successfully logged in', 'success')
                 return redirect(url_for('dashboard.alumni'))

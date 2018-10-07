@@ -56,6 +56,12 @@ def train_test_target_split(enc):
     return x, y, target
 
 
+def delete_a_prediction(id):
+    Hasil.query.filter_by(id_testing=id).delete()
+    Testing.query.filter_by(id=id).delete()
+    db.session.commit()
+
+
 def delete_all_prediction():
     Hasil.query.delete()
     Testing.query.delete()

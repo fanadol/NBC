@@ -7,7 +7,7 @@ class User(db.Model, UserMixin):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    email = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False, unique=True)
     hash_password = db.Column(db.String(100), nullable=False)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
@@ -24,7 +24,7 @@ class User(db.Model, UserMixin):
         self.hash_password = flask_bcrypt.generate_password_hash(password).decode('utf-8')
 
     def check_admin(self, role):
-        return role == True
+        return role == 'Admin'
 
     def check_password(self, password):
         return flask_bcrypt.check_password_hash(self.hash_password, password)

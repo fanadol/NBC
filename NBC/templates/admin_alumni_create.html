@@ -1,0 +1,126 @@
+{% extends 'template.html' %}
+
+{% block subtitle %}
+Buat Data Alumni
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Form
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <form action="" method="post">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                            <label for="id">NIM</label>
+                            <input type="text" class="form-control" name="id" id="id" placeholder="NIM">
+                            </div>
+                            <div class="form-group">
+                                <label for="tipesekolah">Tipe Sekolah</label>
+                                <select name="school_type" id="tipesekolah" class="form-control">
+                                    <option value="SMA" selected>SMA</option>
+                                    <option value="SMK">SMK</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="jeniskelamin">Jenis Kelamin</label>
+                                <select name="gender" id="jeniskelamin" class="form-control">
+                                    <option value="L" selected>L</option>
+                                    <option value="P">P</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="kotasekolah">Kota Sekolah</label>
+                                <select name="school_city" id="kotasekolah" class="form-control">
+                                    <option value="Dalam Kota" selected>Dalam Kota</option>
+                                    <option value="Luar Kota">Luar Kota</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="gajiorangtua">Gaji Orang Tua</label>
+                                <select name="parent_salary" id="gajiorangtua" class="form-control">
+                                    <option value="Sangat Rendah" selected>Sangat Rendah</option>
+                                    <option value="Rendah">Rendah</option>
+                                    <option value="Cukup Rendah">Cukup Rendah</option>
+                                    <option value="Cukup Tinggi">Cukup Tinggi</option>
+                                    <option value="Tinggi">Tinggi</option>
+                                    <option value="Sangat Tinggi">Sangat Tinggi</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="ips1">IP Semester 1</label>
+                                <select name="semester_1" id="ips1" class="form-control">
+                                    <option value="A" selected>A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ips2">IP Semester 2</label>
+                                <select name="semester_2" id="ips2" class="form-control">
+                                    <option value="A" selected>A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ips3">IP Semester 3</label>
+                                <select name="semester_3" id="ips3" class="form-control">
+                                    <option value="A" selected>A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ips4">IP Semester 4</label>
+                                <select name="semester_4" id="ips4" class="form-control">
+                                    <option value="A" selected>A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ipk">IPK</label>
+                                <select name="ipk" id="ipk" class="form-control">
+                                    <option value="A" selected>A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="keteranganlulus">Keterangan Lulus</label>
+                                <select name="ket_lulus" id="keteranganlulus" class="form-control">
+                                    <option value="Tepat Waktu" selected>Tepat Waktu</option>
+                                    <option value="Tidak Tepat Waktu">Tidak Tepat Waktu</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </form>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-6 -->
+</div>
+<!-- /.row -->
+{% endblock %}

@@ -42,10 +42,16 @@ def get_all_users(id=False):
         else:
             return df[id_feature + selected_features]
 
+
 def update_an_user(obj, updatedObj):
     obj.email = updatedObj['email']
     obj.first_name = updatedObj['first_name']
     obj.last_name = updatedObj['last_name']
     obj.phone_number = updatedObj['phone_number']
     obj.admin = updatedObj['admin']
+    db.session.commit()
+
+
+def delete_an_user(email):
+    User.query.filter_by(email=email).delete()
     db.session.commit()

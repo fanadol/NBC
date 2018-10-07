@@ -20,14 +20,15 @@ from NBC.service.nilai_service import get_a_nilai, update_a_nilai
 from . import dashboard
 from NBC.models.testing import Testing
 from NBC.models.training import Training
-from NBC.service.alumni_service import get_all_alumni, get_an_alumni, update_an_alumni
-from NBC.service.prediction_service import get_all_prediction_result, delete_all_prediction
-from NBC.service.training_service import delete_all_training, get_all_training, get_a_training, update_a_training
-from NBC.service.user_service import get_all_users, get_an_user, update_an_user
+from NBC.service.alumni_service import get_all_alumni, get_an_alumni, update_an_alumni, delete_an_alumni
+from NBC.service.prediction_service import get_all_prediction_result, delete_all_prediction, delete_a_prediction
+from NBC.service.training_service import delete_all_training, get_all_training, get_a_training, update_a_training, \
+    delete_a_trainig
+from NBC.service.user_service import get_all_users, get_an_user, update_an_user, delete_an_user
 from NBC.service.database_service import save_to_db
 from NBC.models.user import User
 from NBC.config import Config
-from NBC.service.utils_service import allowed_file
+from NBC.service.utils_service import allowed_file, get_data_length
 
 matplotlib.use('agg')
 
@@ -44,7 +45,8 @@ def index():
 @login_required
 def users():
     users = get_all_users(id=True)
-    return render_template('admin_data_users.html', data=users)
+    len_data = get_data_length()
+    return render_template('admin_data_users.html', data=users, len_data=len_data, modal_for='user')
 
 
 @dashboard.route('/create_user', methods=["GET", "POST"])
@@ -73,7 +75,7 @@ def create_user():
         save_to_db(data)
         flash('User successfully created', 'success')
         return redirect(url_for('dashboard.create_user'))
-    return render_template('admin_create_user.html')
+    return render_template('admin_user_create.html')
 
 
 @dashboard.route('/user/<id>', methods=["GET", "POST"])
@@ -107,9 +109,25 @@ def edit_user(id):
     return render_template('admin_edit_user.html', user=user)
 
 
+@dashboard.route('/user/delete', methods=["POST"])
+@login_required
+def delete_user():
+    if request.method == "POST":
+        email = request.form.get('id')
+        exst = User.query.filter_by(id=id).first()
+        if exst:
+            delete_an_user(email)
+            flash('User success dihapus.', 'success')
+            return redirect(url_for('dashboard.users'))
+        else:
+            flash('Error: Data did not exist.', 'danger')
+            return redirect(url_for('dashboard.users'))
+
+
 @dashboard.route('/alumni', methods=["GET", "POST"])
 @login_required
 def alumni():
+    len_data = get_data_length()
     alumni = get_all_alumni(id=True)
     # POST METHOD
     if request.method == "POST":
@@ -162,7 +180,43 @@ def alumni():
         else:
             flash('Invalid file extension!', 'danger')
             return redirect(request.url)
-    return render_template('admin_data_alumni.html', data=alumni)
+    return render_template('admin_data_alumni.html', data=alumni, len_data=len_data, modal_for='alumni')
+
+
+@dashboard.route('/alumni/create', methods=["GET", "POST"])
+@login_required
+def create_alumni():
+    if request.method == "POST":
+        # get data from form
+        id = request.form.get('id')
+        # check if the nim is conflict or not
+        exst = Alumni.query.filter_by(id=id).first()
+        if exst:
+            flash('Error: NIM Conflict!', 'danger')
+            return redirect(request.url)
+        # make an Alumni model object
+        que_alumni = Alumni(
+            id=id,
+            school_type=request.form.get('school_type'),
+            gender=request.form.get('gender'),
+            school_city=request.form.get('school_city'),
+            parent_salary=request.form.get('parent_salary'),
+            ket_lulus=request.form.get('ket_lulus')
+        )
+        que_nilai = Nilai(
+            id_alumni=id,
+            semester_1=request.form.get('semester_1'),
+            semester_2=request.form.get('semester_2'),
+            semester_3=request.form.get('semester_3'),
+            semester_4=request.form.get('semester_4'),
+            ipk=request.form.get('ipk')
+        )
+        # insert into database
+        save_to_db(que_alumni)
+        save_to_db(que_nilai)
+        flash('Success membuat data alumni.', 'success')
+        return redirect(url_for('dashboard.create_alumni'))
+    return render_template('admin_alumni_create.html')
 
 
 @dashboard.route('/alumni/<id>', methods=["GET", "POST"])
@@ -199,17 +253,34 @@ def edit_alumni(id):
     return render_template('admin_edit_alumni.html', alumni=al, nilai=ni)
 
 
+@dashboard.route('/alumni/delete', methods=["POST"])
+@login_required
+def delete_alumni():
+    if request.method == "POST":
+        id = request.form.get('id')
+        exst = Alumni.query.filter_by(id=id).first()
+        if exst:
+            delete_an_alumni(id)
+            flash('Alumni success dihapus.', 'success')
+            return redirect(url_for('dashboard.alumni'))
+        else:
+            flash('Error: Data did not exist.', 'danger')
+            return redirect(url_for('dashboard.alumni'))
+
+
 @dashboard.route('/training', methods=["GET", "POST"])
 @login_required
 def training():
     training_data = get_all_training()
-    return render_template('admin_data_training.html', data=training_data)
+    len_data = get_data_length()
+    return render_template('admin_data_training.html', data=training_data, len_data=len_data, modal_for='data training')
 
 
 @dashboard.route('/training/<id>', methods=["GET", "POST"])
 @login_required
 def edit_training(id):
     tr = get_a_training(id)
+    category_parent_salary = ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi', 'Tinggi', 'Sangat Tinggi']
     if request.method == "POST":
         try:
             updated_training = {
@@ -231,24 +302,137 @@ def edit_training(id):
         except Exception as e:
             flash('Error: {}'.format(e), 'danger')
             return redirect(request.url)
-    return render_template('admin_edit_training.html', latih=tr)
+    return render_template('admin_edit_training.html', latih=tr, category=category_parent_salary)
+
+
+@dashboard.route('/training/delete', methods=["POST"])
+@login_required
+def delete_training():
+    if request.method == "POST":
+        id = request.form.get('id')
+        exst = Training.query.filter_by(nim=id).first()
+        print(exst)
+        if exst:
+            delete_a_trainig(id)
+            flash('Data training success dihapus.', 'success')
+            return redirect(url_for('dashboard.training'))
+        else:
+            flash('Error: Data did not exist.', 'danger')
+            return redirect(url_for('dashboard.training'))
 
 
 @dashboard.route('/prediction', methods=["GET", "POST"])
 @login_required
 def predict():
     pred_data = get_all_prediction_result()
+    len_data = get_data_length()
     if request.method == "POST":
         delete_all_prediction()
         flash('Data telah berhasil di delete', 'success')
         return redirect(request.url)
-    return render_template('admin_data_predict.html', data=pred_data)
+    return render_template('admin_data_predict.html', data=pred_data, len_data=len_data, modal_for='prediksi')
 
 
-@dashboard.route('/prediction_csv', methods=["GET", "POST"])
+@dashboard.route('/prediction/create', methods=["GET", "POST"])
+@login_required
+def create_predict():
+    # get training data for prediction
+    train_data = get_all_training()
+    if request.method == "POST":
+        # get the data from frontend form
+        nim = request.form.get('id')
+        test_data = {
+            'NIM': nim,
+            'school_type': request.form.get('school_type'),
+            'gender': request.form.get('gender'),
+            'school_city': request.form.get('school_city'),
+            'parent_salary': request.form.get('parent_salary'),
+            'semester_1': request.form.get('semester_1'),
+            'semester_2': request.form.get('semester_2'),
+            'semester_3': request.form.get('semester_3'),
+            'semester_4': request.form.get('semester_4'),
+            'ipk': request.form.get('ipk')
+        }
+        # check if the nim already in databases
+        if not nim:
+            flash('Fill all empty form!', 'danger')
+            return redirect(request.url)
+        exst = Testing.query.filter_by(id=nim).first()
+        # if already in databases, return with alert error
+        if exst:
+            flash('Error, NIM Conflict!', 'danger')
+            return redirect(request.url)
+        try:
+            # make dataframe from test data
+            df = pd.DataFrame(test_data, index=[0])
+            # replace the train ket_lulus into number
+            train_data['ket_lulus'] = train_data['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
+            # concat the dataframe with train data, fill NaN with 0, convert ket_lulus into int type
+            con = pd.concat([train_data.drop('NIM', axis=1), df.drop('NIM', axis=1)], keys=['train', 'test'],
+                            sort=True).fillna(0)
+            con['ket_lulus'] = con['ket_lulus'].astype(int)
+            # one hot encoder all, make sure
+            enc = pd.get_dummies(con)
+            # split x, y, and target
+            x = enc.loc['train'].drop('ket_lulus', axis=1)
+            y = enc.loc['train']['ket_lulus']
+            target = enc.loc['test'].drop('ket_lulus', axis=1)
+            # build the model
+            model = MultinomialNB()
+            model.fit(x, y)
+            # predict the data
+            y_pred = model.predict(target)
+            # convert the result into string
+            if y_pred == 0:
+                y_pred = 'Tidak Tepat Waktu'
+            else:
+                y_pred = 'Tepat Waktu'
+            # insert into database
+            que_test = Testing(
+                id=test_data['NIM'],
+                school_type=test_data['school_type'],
+                gender=test_data['gender'],
+                school_city=test_data['school_city'],
+                parent_salary=test_data['parent_salary'],
+                semester_1=test_data['semester_1'],
+                semester_2=test_data['semester_2'],
+                semester_3=test_data['semester_3'],
+                semester_4=test_data['semester_4'],
+                ipk=test_data['ipk']
+            )
+            que_hasil = Hasil(
+                id_testing=test_data['NIM'],
+                result=y_pred
+            )
+            save_to_db(que_test)
+            save_to_db(que_hasil)
+            flash('Success memprediksi data.', 'success')
+            return redirect(url_for('dashboard.predict'))
+        except Exception as e:
+            flash('Error: {}'.format(e), 'danger')
+            return redirect(request.url)
+    return render_template('admin_prediksi_create.html')
+
+
+@dashboard.route('/prediction/delete', methods=["POST"])
+@login_required
+def delete_predict():
+    if request.method == "POST":
+        id = request.form.get('id')
+        exst = Testing.query.filter_by(id=id).first()
+        if exst:
+            delete_a_prediction(id)
+            flash('Data prediksi success dihapus.', 'success')
+            return redirect(url_for('dashboard.predict'))
+        else:
+            flash('Error: Data did not exist.', 'danger')
+            return redirect(url_for('dashboard.training'))
+
+
+@dashboard.route('/prediction/csv', methods=["GET", "POST"])
 @login_required
 def predict_csv():
-    train = get_all_alumni()
+    train_data = get_all_training()
     if request.method == "POST":
         # check if the post request has the file part
         if 'file' not in request.files:
@@ -286,8 +470,8 @@ def predict_csv():
                                      'semester_2', 'semester_3', 'semester_4', 'ipk']
                 data_test = pd.DataFrame(pred_list)
                 data_target = data_test[selected_features]
-                train['ket_lulus'] = train['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-                df_concat = pd.concat([train, data_target], keys=['train', 'test'], sort=True).fillna(0)
+                train_data['ket_lulus'] = train_data['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
+                df_concat = pd.concat([train_data, data_target], keys=['train', 'test'], sort=True).fillna(0)
                 df_concat['ket_lulus'] = df_concat['ket_lulus'].astype(int)
                 enc = pd.get_dummies(df_concat)
                 x = enc.loc['train'].drop('ket_lulus', axis=1)
