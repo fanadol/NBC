@@ -92,10 +92,9 @@ def clean_train_ipk(df):
     return df
 
 
-def clean_train_discretization(df):
+def clean_train_discretization(df, list_col):
     # change the value of IP and IPK to discret [A, B, C, D, E]. Change based on BukuPanduanAkademik
-    ip = ['IPS_1', 'IPS_2', 'IPS_3', 'IPS_4', 'IPK']
-    for data in ip:
+    for data in list_col:
         for i in range(len(df)):
             if df[data].iloc[i] >= 3.5:
                 df[data].iloc[i] = 'A'

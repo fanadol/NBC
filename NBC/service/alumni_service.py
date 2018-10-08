@@ -51,3 +51,17 @@ def delete_an_alumni(id):
     Nilai.query.filter_by(id_alumni=id).delete()
     Alumni.query.filter_by(id=id).delete()
     db.session.commit()
+
+
+def convert_nilai(ip):
+    if ip >= 3.5:
+        nilai = 'A'
+    elif ip >= 3:
+        nilai = 'B'
+    elif ip >= 2.5:
+        nilai = 'C'
+    elif ip >= 2:
+        nilai = 'D'
+    else:
+        nilai = 'E'
+    return nilai

@@ -162,7 +162,7 @@ def csv_maker():
         df = clean_train_reorder_column(df)
         df['Kota Sekolah'] = clean_train_school_city(df['Kota Sekolah'])
         df = clean_train_ipk(df)
-        df = clean_train_discretization(df)
+        df = clean_train_discretization(df, ['IPS_1', 'IPS_2', 'IPS_3', 'IPS_4', 'IPK'])
         df['Gaji Orang Tua'] = df['Gaji Orang Tua'].astype(str)
         df['Gaji Orang Tua'] = df['Gaji Orang Tua'].replace(['1', '2', '3', '4', '5', '6'],
                                                             ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi',

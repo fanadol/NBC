@@ -124,7 +124,7 @@ Dashboard
                     <tbody>
                     {% for i, row in data.iterrows() %}
                     <tr>
-                        <td>{{ row['NIM'] }}</td>
+                        <td>{{ row['id'] }}</td>
                         <td>{{ row['school_type'] }}</td>
                         <td>{{ row['gender'] }}</td>
                         <td>{{ row['school_city'] }}</td>
@@ -136,10 +136,10 @@ Dashboard
                         <td>{{ row['ipk'] }}</td>
                         <td>{{ row['ket_lulus'] }}</td>
                         <td>
-                            <a href="{{ url_for('dashboard.edit_training', id=row['NIM']) }}"
+                            <a href="{{ url_for('dashboard.edit_training', id=row['id']) }}"
                                class="btn btn-primary">Edit</a>
                             <button data-toggle="modal" data-target="#exampleModal" class="btn btn-danger btn-sm"
-                                    data-whatever="{{ row['NIM'] }}">Delete
+                                    data-whatever="{{ row['id'] }}">Delete
                             </button>
                         </td>
                     </tr>

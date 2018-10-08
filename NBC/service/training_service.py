@@ -14,13 +14,12 @@ def get_a_training(id):
 
 
 def get_all_training():
-    selected_features = ['NIM', 'school_type', 'gender', 'school_city', 'parent_salary', 'semester_1', 'semester_2',
+    selected_features = ['id', 'school_type', 'gender', 'school_city', 'parent_salary', 'semester_1', 'semester_2',
                          'semester_3', 'semester_4', 'ipk', 'ket_lulus']
     datas = Training.query.all()
     frame = []
     for data in datas:
         frame.append({'id': data.id,
-                      'NIM': data.nim,
                       'school_type': data.school_type,
                       'gender': data.gender,
                       'school_city': data.school_city,
