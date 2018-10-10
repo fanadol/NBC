@@ -1,7 +1,7 @@
 {% extends 'template.html' %}
 
 {% block title %}
-Model Building
+Guide Book
 {% endblock %}
 
 {% block subtitle %}
@@ -32,6 +32,7 @@ User Manual
                 <p>Untuk penambahan secara CSV, anda dapat mengaksesnya pada dashboard -> Data Alumni di bagian bawah
                     data alumni.</p>
                 <p>Untuk format menggunakan CSV, dapat dilihat seperti contoh dibawah</p>
+                <p><strong>NOTE: Nama kolom dan value nya merupakan CASE SENSITIVE!</strong></p>
                 <table class="table">
                     <thead>
                     <tr>
@@ -101,6 +102,8 @@ User Manual
                 <p>Data training berasal dari semua data alumni yang digunakan untuk membuat model klasifikasi. Ketika
                     model sudah dibuat, dan anda menambahkan data alumni, maka data alumni anda yang baru tidak akan
                     dimasukkan ke dalam model.</p>
+                <p><strong>NaN Error: </strong> Ketika model anda mengalami masalah NaN, solusinya sangat mudah,
+                    pastikan data dari excel anda memiliki kelas yang berbeda di setiap 10% dari total data anda.</p>
                 <p id="prediction" class="h3">Prediksi</p>
                 <p>Anda dapat memprediksi data baru menggunakan model yang sudah dibuat sebelumnya. Untuk melakukan
                     prediksi data satu per satu, anda dapat mengaksesnya pada menu Prediksi -> Single Data.</p>

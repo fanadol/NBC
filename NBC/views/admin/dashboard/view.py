@@ -7,7 +7,7 @@ import matplotlib
 from werkzeug.utils import secure_filename
 
 from flask import render_template, request, redirect, url_for, flash
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_curve, auc
 from scipy import interp
@@ -145,7 +145,7 @@ def alumni():
             try:
                 timestr = time.strftime("%Y%m%d")
                 filename = timestr + "_" + secure_filename(file.filename)
-                path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", filename)
+                path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "alumni", filename)
                 file.save(path)
                 csv = pd.read_csv(path)
                 for index, row in csv.iterrows():
@@ -293,6 +293,63 @@ def delete_alumni():
 def training():
     training_data = get_all_training()
     len_data = get_data_length()
+    if request.method == "POST":
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No File Choosen', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No File Choosen', 'danger')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            try:
+                # should delete this or no ?
+                delete_all_training()
+                timestr = time.strftime("%Y%m%d")
+                filename = timestr + "_" + secure_filename(file.filename)
+                path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "training", filename)
+                file.save(path)
+                csv = pd.read_csv(path)
+                for index, row in csv.iterrows():
+                    # make ipk
+                    ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
+                    # discrete the IP value
+                    semester_1 = convert_nilai(row['IPS_1'])
+                    semester_2 = convert_nilai(row['IPS_2'])
+                    semester_3 = convert_nilai(row['IPS_3'])
+                    semester_4 = convert_nilai(row['IPS_4'])
+                    ipk = convert_nilai(ipk)
+                    data_training = Training(
+                        id=row['NIM'],
+                        school_type=row['Tipe Sekolah'],
+                        gender=row['Gender'],
+                        school_city=row['Kota Sekolah'],
+                        parent_salary=row['Gaji Orang Tua'],
+                        ket_lulus=row['Keterangan Lulus'],
+                        semester_1=semester_1,
+                        semester_2=semester_2,
+                        semester_3=semester_3,
+                        semester_4=semester_4,
+                        ipk=ipk
+                    )
+                    # check if the data already exist
+                    exst = Training.query.filter_by(id=row['NIM']).first()
+                    if not exst:
+                        save_to_db(data_training)
+                    else:
+                        flash('Some id is duplicated!, please check again!', 'danger')
+                        return redirect(request.url)
+                flash('Successfully menambahkan data alumni', 'success')
+                return redirect(request.url)
+            except Exception as e:
+                flash('Error: {}'.format(e), 'danger')
+                return redirect(request.url)
+        else:
+            flash('Invalid file extension!', 'danger')
+            return redirect(request.url)
     return render_template('admin_data_training.html', data=training_data, len_data=len_data, modal_for='data training')
 
 
@@ -564,26 +621,6 @@ def build():
 def cross_validation():
     # query all the data
     alumni = get_all_alumni(id=True)
-    # if create model button is clicked
-    if request.method == "POST":
-        delete_all_training()
-        for i, row in alumni.iterrows():
-            data = Training(
-                id=row['id'],
-                school_type=row['school_type'],
-                gender=row['gender'],
-                school_city=row['school_city'],
-                parent_salary=row['parent_salary'],
-                semester_1=row['semester_1'],
-                semester_2=row['semester_2'],
-                semester_3=row['semester_3'],
-                semester_4=row['semester_4'],
-                ipk=row['ipk'],
-                ket_lulus=row['ket_lulus']
-            )
-            save_to_db(data)
-        flash('Successfully create a model', 'success')
-        return redirect(url_for('dashboard.index'))
     # one hot encoder
     alumni['ket_lulus'] = alumni['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
     enc = pd.get_dummies(alumni.drop(['id'], axis=1))
@@ -604,7 +641,7 @@ def cross_validation():
     # e.g -> 0, 1%, 2% ... 99%, 100%
     mean_fpr = np.linspace(0, 1, 100)
     plt.figure(figsize=(15, 10))
-    i = 0
+    i = 1
     for train_index, test_index in kf.split(x):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -692,7 +729,44 @@ def cross_validation():
     fig.tight_layout()
     plt.savefig(output_path_kfold)
     plt.clf()
+    # if create model button is clicked
+    if request.method == "POST":
+        delete_all_training()
+        for i, row in alumni.iterrows():
+            data = Training(
+                id=row['id'],
+                school_type=row['school_type'],
+                gender=row['gender'],
+                school_city=row['school_city'],
+                parent_salary=row['parent_salary'],
+                semester_1=row['semester_1'],
+                semester_2=row['semester_2'],
+                semester_3=row['semester_3'],
+                semester_4=row['semester_4'],
+                ipk=row['ipk'],
+                ket_lulus=row['ket_lulus']
+            )
+            save_to_db(data)
+        # save cross validation and confusion matrix as a csv file
+        dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
+                          pd.DataFrame(precision, columns=['precision']),
+                          pd.DataFrame(recall, columns=['recall']),
+                          pd.DataFrame(f1, columns=['f1'])], axis=1)
+        dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
+        dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
+        dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')
+        flash('Successfully create a model', 'success')
+        return redirect(url_for('dashboard.index'))
+    # < END POST REQUEST >
     return render_template('cross_validation.html', scores=items, cf=cf, avg=avgitem)
+
+
+@dashboard.route('/current_model')
+@login_required
+def current_model():
+    cv = pd.read_csv('current_model_cv.csv')
+    cf = pd.read_csv('current_model_cf.csv')
+    return render_template('admin_check_current_model.html', cv=cv, cf=cf)
 
 
 @dashboard.route('/manual', methods=["GET"])
