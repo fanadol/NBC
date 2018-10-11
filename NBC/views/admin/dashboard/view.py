@@ -343,7 +343,7 @@ def training():
                         flash('Some id is duplicated!, please check again!', 'danger')
                         return redirect(request.url)
                 flash('Successfully menambahkan data alumni', 'success')
-                return redirect(request.url)
+                return redirect(url_for('dashboard.cross_validation', dt='training'))
             except Exception as e:
                 flash('Error: {}'.format(e), 'danger')
                 return redirect(request.url)
@@ -610,20 +610,17 @@ def delete_predict():
             return redirect(url_for('dashboard.training'))
 
 
-@dashboard.route('/build', methods=["GET"])
+@dashboard.route('/cross_validation/<dt>', methods=["GET", "POST"])
 @login_required
-def build():
-    return render_template('model_building.html')
-
-
-@dashboard.route('/cross_validation', methods=["GET", "POST"])
-@login_required
-def cross_validation():
+def cross_validation(dt):
     # query all the data
-    alumni = get_all_alumni(id=True)
+    if dt == 'alumni':
+        dtobj = get_all_alumni(id=True)
+    else:
+        dtobj = get_all_training()
     # one hot encoder
-    alumni['ket_lulus'] = alumni['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-    enc = pd.get_dummies(alumni.drop(['id'], axis=1))
+    dtobj['ket_lulus'] = dtobj['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
+    enc = pd.get_dummies(dtobj.drop(['id'], axis=1))
     x = np.array(enc.drop('ket_lulus', axis=1))
     y = np.array(enc['ket_lulus'])
     # create the model
@@ -732,7 +729,7 @@ def cross_validation():
     # if create model button is clicked
     if request.method == "POST":
         delete_all_training()
-        for i, row in alumni.iterrows():
+        for i, row in dtobj.iterrows():
             data = Training(
                 id=row['id'],
                 school_type=row['school_type'],
@@ -758,7 +755,7 @@ def cross_validation():
         flash('Successfully create a model', 'success')
         return redirect(url_for('dashboard.index'))
     # < END POST REQUEST >
-    return render_template('cross_validation.html', scores=items, cf=cf, avg=avgitem)
+    return render_template('cross_validation.html', scores=items, cf=cf, avg=avgitem, dt=dt)
 
 
 @dashboard.route('/current_model')

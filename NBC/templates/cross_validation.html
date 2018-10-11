@@ -113,6 +113,7 @@ Model Score
                     <img src="/static/ROC.png" alt="ROC" class="img-responsive">
                 </div>
                 <!-- /.table-responsive -->
+                {% if dt == 'alumni' %}
                 <div class="well">
                     <h4>Caution</h4>
                     <p>Pastikan akurasi dari model cukup bagus untuk digunakan.</p>
@@ -120,6 +121,7 @@ Model Score
                         <button class="btn btn-default btn-lg btn-block" type="submit">Buat Model</button>
                     </form>
                 </div>
+                {% endif %}
             </div>
             <!-- /.panel-body -->
         </div>
