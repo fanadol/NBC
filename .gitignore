@@ -5,4 +5,8 @@ node_modules
 bower_components
 Data Penelitian - Sheet2.csv
 Data Penelitian - Sheet3.csv
-upload/*
+alumni/*
+prediksi/*
+training/*
+current_model_cf.csv
+current_model_cv.csv

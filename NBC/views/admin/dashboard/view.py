@@ -620,7 +620,7 @@ def cross_validation(dt):
         dtobj = get_all_training()
     # one hot encoder
     dtobj['ket_lulus'] = dtobj['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-    enc = pd.get_dummies(dtobj.drop(['id'], axis=1))
+    enc = pd.get_dummies(dtobj.drop(['id', 'parent_salary'], axis=1))
     x = np.array(enc.drop('ket_lulus', axis=1))
     y = np.array(enc['ket_lulus'])
     # create the model
@@ -643,24 +643,14 @@ def cross_validation(dt):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # fit the model, then predict the test fold
-        # print("TRAIN: ", train_index, "TEST: ", test_index)
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         y_prob = model.predict_proba(x_test)[:, 1]
-        # print("Y Test: {}".format(y_test))
-        # print("Y Prob: {}".format(y_prob))
         # compute confusion matrix, ROC curve and AUC
         cf += confusion_matrix(y_test, y_pred)
         fpr, tpr, thresholds = roc_curve(y_test, y_prob)
-        # print("Unique y test: {}".format(pd.Series(y_test).unique()))
-        # print("Unique y prob: {}".format(pd.Series(y_prob).unique()))
-        # print("FPR: {}".format(fpr))
-        # print("Threshold: {}".format(thresholds))
-        # y_smooth = spline(fpr, tpr, mean_fpr)
         tprs.append(interp(mean_fpr, fpr, tpr))
         tprs[-1][0] = 0.0
-        # print("fpr: {}".format(fpr))
-        # print("tpr: {}".format(tpr))
         # compute the auc using fpr and tpr
         roc_auc = auc(fpr, tpr)
         aucs.append(roc_auc)
@@ -729,6 +719,7 @@ def cross_validation(dt):
     # if create model button is clicked
     if request.method == "POST":
         delete_all_training()
+        dtobj['ket_lulus'] = dtobj['ket_lulus'].replace([0, 1], ['Tidak Tepat Waktu', 'Tepat Waktu'])
         for i, row in dtobj.iterrows():
             data = Training(
                 id=row['id'],
@@ -761,9 +752,13 @@ def cross_validation(dt):
 @dashboard.route('/current_model')
 @login_required
 def current_model():
-    cv = pd.read_csv('current_model_cv.csv')
-    cf = pd.read_csv('current_model_cf.csv')
-    return render_template('admin_check_current_model.html', cv=cv, cf=cf)
+    try:
+        cv = pd.read_csv('current_model_cv.csv')
+        cf = pd.read_csv('current_model_cf.csv')
+        return render_template('admin_check_current_model.html', cv=cv, cf=cf)
+    except:
+        flash('Belum ada model, silahkan buat model terlebih dahulu!', 'danger')
+        return redirect(url_for('dashboard.alumni'))
 
 
 @dashboard.route('/manual', methods=["GET"])
