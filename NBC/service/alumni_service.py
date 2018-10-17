@@ -17,12 +17,11 @@ def get_all_alumni(id=False):
     :return pandas.DataFrame without Object Alumni, and id column:
     """
     id_feature = ['id']
-    selected_features = ['school_type', 'gender', 'school_city', 'parent_salary', 'semester_1', 'semester_2',
+    selected_features = ['school_type', 'gender', 'school_city', 'semester_1', 'semester_2',
                          'semester_3', 'semester_4', 'ipk', 'ket_lulus']
     alumni = Alumni.query.join(Nilai, Alumni.id == Nilai.id_alumni) \
-        .add_columns(Alumni.id, Alumni.school_type, Alumni.gender, Alumni.school_city,
-                     Alumni.parent_salary, Nilai.semester_1, Nilai.semester_2, Nilai.semester_3,
-                     Nilai.semester_4, Nilai.ipk, Alumni.ket_lulus).all()
+        .add_columns(Alumni.id, Alumni.school_type, Alumni.gender, Alumni.school_city, Nilai.semester_1,
+                     Nilai.semester_2, Nilai.semester_3, Nilai.semester_4, Nilai.ipk, Alumni.ket_lulus).all()
     df = pd.DataFrame(alumni)
     # create empty data frame with columns for DataFrame.to_html()
     if df.empty and not id:
@@ -42,7 +41,6 @@ def update_an_alumni(obj, updatedObj):
     obj.school_type = updatedObj['school_type']
     obj.gender = updatedObj['gender']
     obj.school_city = updatedObj['school_city']
-    obj.parent_salary = updatedObj['parent_salary']
     obj.ket_lulus = updatedObj['ket_lulus']
     db.session.commit()
 

@@ -1,7 +1,11 @@
 {% extends 'template.html' %}
 
+{% block title %}
+Admin - Data Prediksi
+{% endblock %}
+
 {% block subtitle %}
-Dashboard
+Data Prediksi
 {% endblock %}
 
 {% block content %}
@@ -111,7 +115,7 @@ Dashboard
                         <th>TS</th>
                         <th>JK</th>
                         <th>KS</th>
-                        <th>GO</th>
+                        <!--<th>GO</th>-->
                         <th>IPS1</th>
                         <th>IPS2</th>
                         <th>IPS3</th>
@@ -128,7 +132,7 @@ Dashboard
                         <td>{{ row['school_type'] }}</td>
                         <td>{{ row['gender'] }}</td>
                         <td>{{ row['school_city'] }}</td>
-                        <td>{{ row['parent_salary'] }}</td>
+                        <!--<td>{{ row['parent_salary'] }}</td>-->
                         <td>{{ row['semester_1'] }}</td>
                         <td>{{ row['semester_2'] }}</td>
                         <td>{{ row['semester_3'] }}</td>

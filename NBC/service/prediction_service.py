@@ -16,12 +16,11 @@ def get_all_prediction_result():
     determine whether need id column or not
     :return pandas.DataFrame without Object Alumni, and id column:
     """
-    selected_features = ['id', 'school_type', 'gender', 'school_city', 'parent_salary', 'semester_1', 'semester_2',
+    selected_features = ['id', 'school_type', 'gender', 'school_city', 'semester_1', 'semester_2',
                          'semester_3', 'semester_4', 'ipk', 'result']
     prediction = Testing.query.join(Hasil, Testing.id == Hasil.id_testing).add_columns(Testing.id, Testing.school_type,
                                                                                        Testing.gender,
                                                                                        Testing.school_city,
-                                                                                       Testing.parent_salary,
                                                                                        Testing.semester_1,
                                                                                        Testing.semester_2,
                                                                                        Testing.semester_3,

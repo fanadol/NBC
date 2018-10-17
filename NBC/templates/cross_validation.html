@@ -26,6 +26,7 @@ Model Score
                         <th>Precision</th>
                         <th>Recall</th>
                         <th>F1-Score</th>
+                        <th>Dummy Score</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -36,6 +37,7 @@ Model Score
                         <td>{{ score.precision }}</td>
                         <td>{{ score.recall }}</td>
                         <td>{{ score.f1 }}</td>
+                        <td>{{ score.dummy }}</td>
                     </tr>
                     {% endfor %}
                     {% for avg in avg %}
@@ -45,6 +47,7 @@ Model Score
                         <td>{{ avg.avg_prec }}</td>
                         <td>{{ avg.avg_recall }}</td>
                         <td>{{ avg.avg_f1 }}</td>
+                        <td>{{ avg.avg_dummy }}</td>
                     </tr>
                     {% endfor %}
                     </tbody>

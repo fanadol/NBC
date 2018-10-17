@@ -57,12 +57,12 @@ def mix():
                 data.append(l.split(','))
         data = np.array(data)
         df = pd.DataFrame(data,
-                          columns=['gender', 'school_type', 'school_city', 'parent_salary', 'semester_1', 'semester_2',
+                          columns=['gender', 'school_type', 'school_city', 'semester_1', 'semester_2',
                                    'semester_3', 'semester_4', 'ipk', 'keterangan_lulus'])
         df['keterangan_lulus'] = df['keterangan_lulus'].astype(int)
 
         multiFeatures = ['gender', 'school_type', 'school_city']
-        gaussFeatures = ['parent_salary', 'semester_1', 'semester_2', 'semester_3', 'semester_4', 'ipk']
+        gaussFeatures = ['semester_1', 'semester_2', 'semester_3', 'semester_4', 'ipk']
 
         multiNB_data = df[multiFeatures + ['keterangan_lulus']]
         modelMulti = MultinomialNB(alpha=0)
@@ -71,7 +71,6 @@ def mix():
             'gender': ['L'],
             'school_type': ['SMA'],
             'school_city': ['Dalam'],
-            'parent_salary': [3500],
             'semester_1': [3.3],
             'semester_2': [3.4],
             'semester_3': [3.1],
@@ -122,14 +121,13 @@ def ptest_multi():
                     continue
                 data.append(l.split(','))
         data = np.array(data)
-        features_x = ['gender', 'school_type', 'school_city', 'parent_salary', 'semester_1', 'semester_2',
+        features_x = ['gender', 'school_type', 'school_city', 'semester_1', 'semester_2',
                       'semester_3', 'semester_4', 'ipk']
         features_y = ['keterangan_lulus']
         df_target = pd.DataFrame({
             'gender': ['L'],
             'school_type': ['SMA'],
             'school_city': ['Dalam'],
-            'parent_salary': ['Rendah'],
             'semester_1': ['B'],
             'semester_2': ['B'],
             'semester_3': ['B'],
@@ -154,19 +152,17 @@ def ptest_multi():
 def csv_maker():
     if request.method == "POST":
         path = Config.ROOT_DIRECTORY
-        file = os.path.join(path, "Data Penelitian - Sheet3.csv")
+        file = os.path.join(path, "Data Target th 2016.csv")
         df = clean_train_column(file)
         df['Tipe Sekolah'] = clean_train_school_type(df['Tipe Sekolah'])
-        df['Gaji Orang Tua'] = clean_train_discret_salary(df['Gaji Orang Tua'])
-        df['Gaji Orang Tua'] = clean_train_with_median(df['Gaji Orang Tua'])
         df = clean_train_reorder_column(df)
         df['Kota Sekolah'] = clean_train_school_city(df['Kota Sekolah'])
         df = clean_train_ipk(df)
-        df = clean_train_discretization(df, ['IPS_1', 'IPS_2', 'IPS_3', 'IPS_4', 'IPK'])
-        df['Gaji Orang Tua'] = df['Gaji Orang Tua'].astype(str)
-        df['Gaji Orang Tua'] = df['Gaji Orang Tua'].replace(['1', '2', '3', '4', '5', '6'],
-                                                            ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi',
-                                                             'Tinggi', 'Sangat Tinggi'])
+        # df = clean_train_discretization(df, ['IPS_1', 'IPS_2', 'IPS_3', 'IPS_4', 'IPK'])
+        # df['Gaji Orang Tua'] = df['Gaji Orang Tua'].astype(str)
+        # df['Gaji Orang Tua'] = df['Gaji Orang Tua'].replace(['1', '2', '3', '4', '5', '6'],
+        #                                                     ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi',
+        #                                                      'Tinggi', 'Sangat Tinggi'])
         df.to_csv('Data Result - Sheet3.csv', encoding='utf-8', index=False)
         return render_template('csv_maker.html')
     return render_template('csv_maker.html')

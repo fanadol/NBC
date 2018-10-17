@@ -1,5 +1,9 @@
 {% extends 'template.html' %}
 
+{% block title %}
+Admin - Edit Alumni
+{% endblock %}
+
 {% block subtitle %}
 Edit Alumni
 {% endblock %}
@@ -58,19 +62,19 @@ Edit Alumni
                                     {% endif %}
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="gajiorangtua">Gaji Orang Tua</label>
-                                <select name="parent_salary" id="gajiorangtua" class="form-control">
-                                    {% for val in ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi', 'Tinggi',
-                                    'Sangat Tinggi'] %}
-                                    {% if alumni.parent_salary == val %}
-                                    <option value="{{val}}" selected>{{val}}</option>
-                                    {% else %}
-                                    <option value="{{val}}">{{val}}</option>
-                                    {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </div>
+                            <!--<div class="form-group">-->
+                                <!--<label for="gajiorangtua">Gaji Orang Tua</label>-->
+                                <!--<select name="parent_salary" id="gajiorangtua" class="form-control">-->
+                                    <!--{% for val in ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi', 'Tinggi',-->
+                                    <!--'Sangat Tinggi'] %}-->
+                                    <!--{% if alumni.parent_salary == val %}-->
+                                    <!--<option value="{{val}}" selected>{{val}}</option>-->
+                                    <!--{% else %}-->
+                                    <!--<option value="{{val}}">{{val}}</option>-->
+                                    <!--{% endif %}-->
+                                    <!--{% endfor %}-->
+                                <!--</select>-->
+                            <!--</div>-->
                             <div class="form-group">
                                 <label for="ips1">IP Semester 1</label>
                                 <select name="semester_1" id="ips1" class="form-control">

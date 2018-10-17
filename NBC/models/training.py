@@ -8,7 +8,6 @@ class Training(db.Model):
     school_type = db.Column(db.String(10), nullable=False)
     gender = db.Column(db.String(1), nullable=False)
     school_city = db.Column(db.String(10), nullable=False)
-    parent_salary = db.Column(db.String(20), nullable=False)
     semester_1 = db.Column(db.String(1), nullable=False)
     semester_2 = db.Column(db.String(1), nullable=False)
     semester_3 = db.Column(db.String(1), nullable=False)

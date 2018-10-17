@@ -4,6 +4,7 @@ import time
 import numpy as np
 import pandas as pd
 import matplotlib
+from sklearn.dummy import DummyClassifier
 from werkzeug.utils import secure_filename
 
 from flask import render_template, request, redirect, url_for, flash
@@ -50,6 +51,7 @@ def users():
 
 
 @dashboard.route('/create_user', methods=["GET", "POST"])
+@login_required
 def create_user():
     if request.method == "POST":
         email = request.form.get('email')
@@ -154,7 +156,7 @@ def alumni():
                         school_type=row['Tipe Sekolah'],
                         gender=row['Gender'],
                         school_city=row['Kota Sekolah'],
-                        parent_salary=row['Gaji Orang Tua'],
+                        # parent_salary=row['Gaji Orang Tua'],
                         ket_lulus=row['Keterangan Lulus']
                     )
                     # make ipk
@@ -220,7 +222,7 @@ def create_alumni():
             school_type=request.form.get('school_type'),
             gender=request.form.get('gender'),
             school_city=request.form.get('school_city'),
-            parent_salary=request.form.get('parent_salary'),
+            # parent_salary=request.form.get('parent_salary'),
             ket_lulus=request.form.get('ket_lulus')
         )
         que_nilai = Nilai(
@@ -254,7 +256,7 @@ def edit_alumni(id):
                 'school_type': request.form.get('school_type'),
                 'gender': request.form.get('gender'),
                 'school_city': request.form.get('school_city'),
-                'parent_salary': request.form.get('parent_salary'),
+                # 'parent_salary': request.form.get('parent_salary'),
                 'ket_lulus': request.form.get('ket_lulus')
             }
             updated_nilai = {
@@ -327,7 +329,7 @@ def training():
                         school_type=row['Tipe Sekolah'],
                         gender=row['Gender'],
                         school_city=row['Kota Sekolah'],
-                        parent_salary=row['Gaji Orang Tua'],
+                        # parent_salary=row['Gaji Orang Tua'],
                         ket_lulus=row['Keterangan Lulus'],
                         semester_1=semester_1,
                         semester_2=semester_2,
@@ -342,7 +344,7 @@ def training():
                     else:
                         flash('Some id is duplicated!, please check again!', 'danger')
                         return redirect(request.url)
-                flash('Successfully menambahkan data alumni', 'success')
+                flash('Success menambahkan data alumni', 'success')
                 return redirect(url_for('dashboard.cross_validation', dt='training'))
             except Exception as e:
                 flash('Error: {}'.format(e), 'danger')
@@ -365,7 +367,7 @@ def edit_training(id):
                 'school_type': request.form.get('school_type'),
                 'gender': request.form.get('gender'),
                 'school_city': request.form.get('school_city'),
-                'parent_salary': request.form.get('parent_salary'),
+                # 'parent_salary': request.form.get('parent_salary'),
                 'ket_lulus': request.form.get('ket_lulus'),
                 'semester_1': request.form.get('semester_1'),
                 'semester_2': request.form.get('semester_2'),
@@ -402,6 +404,7 @@ def delete_training():
 def predict():
     pred_data = get_all_prediction_result()
     len_data = get_data_length()
+    # from delete button
     if request.method == "POST":
         delete_all_prediction()
         flash('Data telah berhasil di delete', 'success')
@@ -415,41 +418,41 @@ def create_predict():
     # get training data for prediction
     train_data = get_all_training()
     if request.method == "POST":
-        # get the data from frontend form
-        id = request.form.get('id')
-        semester_1 = float(request.form.get('semester_1'))
-        semester_2 = float(request.form.get('semester_2'))
-        semester_3 = float(request.form.get('semester_3'))
-        semester_4 = float(request.form.get('semester_4'))
-        ipk = (semester_1 + semester_2 + semester_3 + semester_4) / 4
-        # change the value into categorical
-        semester_1 = convert_nilai(semester_1)
-        semester_2 = convert_nilai(semester_2)
-        semester_3 = convert_nilai(semester_3)
-        semester_4 = convert_nilai(semester_4)
-        ipk = convert_nilai(ipk)
-        test_data = {
-            'id': id,
-            'school_type': request.form.get('school_type'),
-            'gender': request.form.get('gender'),
-            'school_city': request.form.get('school_city'),
-            'parent_salary': request.form.get('parent_salary'),
-            'semester_1': semester_1,
-            'semester_2': semester_2,
-            'semester_3': semester_3,
-            'semester_4': semester_4,
-            'ipk': ipk
-        }
-        # check if the nim already in databases
-        if not id:
-            flash('Fill all empty form!', 'danger')
-            return redirect(request.url)
-        exst = Testing.query.filter_by(id=id).first()
-        # if already in databases, return with alert error
-        if exst:
-            flash('Error, NIM Conflict!', 'danger')
-            return redirect(request.url)
         try:
+            # get the data from frontend form
+            id = request.form.get('id')
+            # check if the nim already in databases
+            if not id:
+                flash('Fill all empty form!', 'danger')
+                return redirect(request.url)
+            semester_1 = float(request.form.get('semester_1'))
+            semester_2 = float(request.form.get('semester_2'))
+            semester_3 = float(request.form.get('semester_3'))
+            semester_4 = float(request.form.get('semester_4'))
+            ipk = (semester_1 + semester_2 + semester_3 + semester_4) / 4
+            # change the value into categorical
+            semester_1 = convert_nilai(semester_1)
+            semester_2 = convert_nilai(semester_2)
+            semester_3 = convert_nilai(semester_3)
+            semester_4 = convert_nilai(semester_4)
+            ipk = convert_nilai(ipk)
+            test_data = {
+                'id': id,
+                'school_type': request.form.get('school_type'),
+                'gender': request.form.get('gender'),
+                'school_city': request.form.get('school_city'),
+                # 'parent_salary': request.form.get('parent_salary'),
+                'semester_1': semester_1,
+                'semester_2': semester_2,
+                'semester_3': semester_3,
+                'semester_4': semester_4,
+                'ipk': ipk
+            }
+            exst = Testing.query.filter_by(id=id).first()
+            # if already in databases, return with alert error
+            if exst:
+                flash('Error, NIM Duplicated!', 'danger')
+                return redirect(request.url)
             # make dataframe from test data
             df = pd.DataFrame(test_data, index=[0])
             # replace the train ket_lulus into number
@@ -480,7 +483,7 @@ def create_predict():
                 school_type=test_data['school_type'],
                 gender=test_data['gender'],
                 school_city=test_data['school_city'],
-                parent_salary=test_data['parent_salary'],
+                # parent_salary=test_data['parent_salary'],
                 semester_1=test_data['semester_1'],
                 semester_2=test_data['semester_2'],
                 semester_3=test_data['semester_3'],
@@ -506,18 +509,18 @@ def create_predict():
 def predict_csv():
     train_data = get_all_training()
     if request.method == "POST":
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No File Choosen', 'danger')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            flash('No File Choosen', 'danger')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            try:
+        try:
+            # check if the post request has the file part
+            if 'file' not in request.files:
+                flash('No File Choosen', 'danger')
+                return redirect(request.url)
+            file = request.files['file']
+            # if user does not select file, browser also
+            # submit an empty part without filename
+            if file.filename == '':
+                flash('No File Choosen', 'danger')
+                return redirect(request.url)
+            if file and allowed_file(file.filename):
                 timestr = time.strftime("%Y%m%d")
                 filename = timestr + "_" + secure_filename(file.filename)
                 path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "prediksi", filename)
@@ -531,14 +534,14 @@ def predict_csv():
                         'school_type': row['Tipe Sekolah'],
                         'gender': row['Gender'],
                         'school_city': row['Kota Sekolah'],
-                        'parent_salary': row['Gaji Orang Tua'],
+                        # 'parent_salary': row['Gaji Orang Tua'],
                         'semester_1': row['IPS_1'],
                         'semester_2': row['IPS_2'],
                         'semester_3': row['IPS_3'],
                         'semester_4': row['IPS_4'],
                         'ipk': ((row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4)
                     })
-                selected_features = ['school_type', 'gender', 'school_city', 'parent_salary', 'semester_1',
+                selected_features = ['school_type', 'gender', 'school_city', 'semester_1',
                                      'semester_2', 'semester_3', 'semester_4', 'ipk']
                 data_test = pd.DataFrame(pred_list)
                 # change the value of nilai to discret
@@ -562,16 +565,12 @@ def predict_csv():
                 # combine the result and the data
                 dfr = pd.concat([data_test, y_pred], axis=1, sort=True)
                 for i, row in dfr.iterrows():
-                    exst = Testing.query.filter_by(id=row['id']).first()
-                    if exst:
-                        flash('ID conflict, silahkan kosongkan tabel prediksi terlebih dahulu!', 'danger')
-                        return redirect(request.url)
                     obj_testing = Testing(
                         id=row['id'],
                         school_type=row['school_type'],
                         gender=row['gender'],
                         school_city=row['school_city'],
-                        parent_salary=row['parent_salary'],
+                        # parent_salary=row['parent_salary'],
                         semester_1=row['semester_1'],
                         semester_2=row['semester_2'],
                         semester_3=row['semester_3'],
@@ -586,9 +585,9 @@ def predict_csv():
                     save_to_db(obj_hasil)
                 flash('Prediksi Berhasil', 'success')
                 return redirect(url_for('dashboard.predict'))
-            except Exception as e:
-                flash('Error: {}'.format(e), 'danger')
-                return redirect(request.url)
+        except Exception as e:
+            flash('Error: {}'.format(e), 'danger')
+            return redirect(request.url)
         else:
             flash('Invalid file extension!', 'danger')
             return redirect(request.url)
@@ -613,140 +612,159 @@ def delete_predict():
 @dashboard.route('/cross_validation/<dt>', methods=["GET", "POST"])
 @login_required
 def cross_validation(dt):
-    # query all the data
-    if dt == 'alumni':
-        dtobj = get_all_alumni(id=True)
-    else:
-        dtobj = get_all_training()
-    # one hot encoder
-    dtobj['ket_lulus'] = dtobj['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-    enc = pd.get_dummies(dtobj.drop(['id', 'parent_salary'], axis=1))
-    x = np.array(enc.drop('ket_lulus', axis=1))
-    y = np.array(enc['ket_lulus'])
-    # create the model
-    model = MultinomialNB()
-    # cross validation
-    kf = KFold(n_splits=10)
-    cf = np.array([[0, 0], [0, 0]])
-    f1 = []
-    recall = []
-    precision = []
-    scores = []
-    tprs = []
-    aucs = []
-    # make number with linspace between 0 and 1 with percentage.
-    # e.g -> 0, 1%, 2% ... 99%, 100%
-    mean_fpr = np.linspace(0, 1, 100)
-    plt.figure(figsize=(15, 10))
-    i = 1
-    for train_index, test_index in kf.split(x):
-        x_train, x_test = x[train_index], x[test_index]
-        y_train, y_test = y[train_index], y[test_index]
-        # fit the model, then predict the test fold
-        model.fit(x_train, y_train)
-        y_pred = model.predict(x_test)
-        y_prob = model.predict_proba(x_test)[:, 1]
-        # compute confusion matrix, ROC curve and AUC
-        cf += confusion_matrix(y_test, y_pred)
-        fpr, tpr, thresholds = roc_curve(y_test, y_prob)
-        tprs.append(interp(mean_fpr, fpr, tpr))
-        tprs[-1][0] = 0.0
-        # compute the auc using fpr and tpr
-        roc_auc = auc(fpr, tpr)
-        aucs.append(roc_auc)
-        # plot it
-        plt.plot(fpr, tpr, lw=1, alpha=0.5, label='ROC fold %d (AUC = %0.2f)' % (i, roc_auc))
-        # calculate the accuracy, f1-score, recall, precision
-        f1.append(f1_score(y_test, y_pred, average='macro'))
-        recall.append(recall_score(y_test, y_pred, average='macro'))
-        precision.append(precision_score(y_test, y_pred, average='macro'))
-        score = model.score(x_test, y_test)
-        scores.append(score)
-        i += 1
-    # put all scores inside a dict
-    items = []
-    for i in range(len(scores)):
-        item = dict(numb=i + 1, f1=f1[i], precision=precision[i], recall=recall[i], score=scores[i])
-        items.append(item)
-    # put the average inside a dict
-    avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
-                    avg_recall=np.average(recall), avg_score=np.average(scores))]
-    # plot the ROC Curve, then save it into image file
-    plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', alpha=.8)
-    mean_tpr = np.mean(tprs, axis=0)
-    mean_tpr[-1] = 1
-    # mean of the auc (from mean false positive rate and mean true positive rate)
-    mean_auc = auc(mean_fpr, mean_tpr)
-    # calculate the standard deviation for aucs
-    std_auc = np.std(aucs)
-    plt.plot(mean_fpr, mean_tpr, color='b', label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
-             lw=2, alpha=.8)
-    # calculate the standard deviation for tprs
-    std_tpr = np.std(tprs, axis=0)
-    tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
-    tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-    # plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2, label=r'$\pm$ 1 std.dev.')
-    plt.xlim([-0.05, 1.05])
-    plt.ylim([-0.05, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic')
-    plt.legend(loc='lower right')
-    path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-    output_path = os.path.join(path, 'static/ROC.png')
-    output_path_kfold = os.path.join(path, 'static/kfold.png')
-    plt.savefig(output_path)
-    plt.clf()
-    # plot the k fold
-    fig, ax = plt.subplots()
-    bar_width = 0.2
-    N = 10
-    ind = np.arange(N)
-    rect_f1 = ax.bar(ind - 2 * bar_width, f1, bar_width, color='r', label='f1-score')
-    rect_recall = ax.bar(ind - bar_width, recall, bar_width, color='g', label='recall')
-    rect_precision = ax.bar(ind, precision, bar_width, color='b', label='precision')
-    rect_score = ax.bar(ind + bar_width, scores, bar_width, color='y', label='accuracy')
-    ax.set_xlabel('Folds')
-    ax.set_ylabel('Scores')
-    ax.set_title('Stratified 10 Fold Cross Validation')
-    ax.set_xticks(ind + bar_width / 2)
-    ax.set_xticklabels(('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'))
-    ax.legend()
-    fig.set_size_inches(15, 10)
-    fig.tight_layout()
-    plt.savefig(output_path_kfold)
-    plt.clf()
-    # if create model button is clicked
-    if request.method == "POST":
-        delete_all_training()
-        dtobj['ket_lulus'] = dtobj['ket_lulus'].replace([0, 1], ['Tidak Tepat Waktu', 'Tepat Waktu'])
-        for i, row in dtobj.iterrows():
-            data = Training(
-                id=row['id'],
-                school_type=row['school_type'],
-                gender=row['gender'],
-                school_city=row['school_city'],
-                parent_salary=row['parent_salary'],
-                semester_1=row['semester_1'],
-                semester_2=row['semester_2'],
-                semester_3=row['semester_3'],
-                semester_4=row['semester_4'],
-                ipk=row['ipk'],
-                ket_lulus=row['ket_lulus']
-            )
-            save_to_db(data)
-        # save cross validation and confusion matrix as a csv file
-        dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
-                          pd.DataFrame(precision, columns=['precision']),
-                          pd.DataFrame(recall, columns=['recall']),
-                          pd.DataFrame(f1, columns=['f1'])], axis=1)
-        dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
-        dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
-        dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')
-        flash('Successfully create a model', 'success')
-        return redirect(url_for('dashboard.index'))
-    # < END POST REQUEST >
-    return render_template('cross_validation.html', scores=items, cf=cf, avg=avgitem, dt=dt)
+    try:
+        # query all the data
+        if dt == 'alumni':
+            dtobj = get_all_alumni(id=True)
+        else:
+            dtobj = get_all_training()
+        # one hot encoder
+        dtobj['ket_lulus'] = dtobj['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
+        enc = pd.get_dummies(dtobj.drop(['id'], axis=1))
+        x = np.array(enc.drop('ket_lulus', axis=1))
+        y = np.array(enc['ket_lulus'])
+        # create the model
+        dummy = DummyClassifier(strategy='most_frequent')
+        model = MultinomialNB()
+        # cross validation
+        kf = KFold(n_splits=10)
+        cf = np.array([[0, 0], [0, 0]])
+        f1 = []
+        recall = []
+        precision = []
+        scores = []
+        dummies = []
+        tprs = []
+        aucs = []
+        # make number with linspace between 0 and 1 with percentage.
+        # e.g -> 0, 1%, 2% ... 99%, 100%
+        mean_fpr = np.linspace(0, 1, 100)
+        plt.figure(figsize=(15, 10))
+        i = 1
+        for train_index, test_index in kf.split(x):
+            x_train, x_test = x[train_index], x[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            # fit the model, then predict the test fold
+            dummy.fit(x_train, y_train)
+            model.fit(x_train, y_train)
+            y_pred = model.predict(x_test)
+            y_prob = model.predict_proba(x_test)[:, 1]
+            # compute confusion matrix, ROC curve and AUC
+            cf += confusion_matrix(y_test, y_pred)
+            fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+            tprs.append(interp(mean_fpr, fpr, tpr))
+            tprs[-1][0] = 0.0
+            # compute the auc using fpr and tpr
+            roc_auc = auc(fpr, tpr)
+            aucs.append(roc_auc)
+            # plot it
+            plt.plot(fpr, tpr, lw=1, alpha=0.5, label='ROC fold %d (AUC = %0.2f)' % (i, roc_auc))
+            # calculate the accuracy, f1-score, recall, precision
+            f1.append(f1_score(y_test, y_pred, average='macro'))
+            recall.append(recall_score(y_test, y_pred, average='macro'))
+            precision.append(precision_score(y_test, y_pred, average='macro'))
+            dummies.append(dummy.score(x_test, y_test))
+            score = model.score(x_test, y_test)
+            scores.append(score)
+            i += 1
+        # put all scores inside a dict
+        items = []
+        for i in range(len(scores)):
+            item = dict(numb=i + 1, f1=f1[i], precision=precision[i], recall=recall[i], score=scores[i], dummy=dummies[i])
+            items.append(item)
+        # put the average inside a dict
+        avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
+                        avg_recall=np.average(recall), avg_score=np.average(scores), avg_dummy=np.average(dummies))]
+        # plot the ROC Curve, then save it into image file
+        plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', alpha=.8)
+        mean_tpr = np.mean(tprs, axis=0)
+        mean_tpr[-1] = 1
+        # mean of the auc (from mean false positive rate and mean true positive rate)
+        mean_auc = auc(mean_fpr, mean_tpr)
+        # calculate the standard deviation for aucs
+        std_auc = np.std(aucs)
+        plt.plot(mean_fpr, mean_tpr, color='b', label=r'Mean ROC (AUC = %0.2f)' % (mean_auc),
+                 lw=2, alpha=.8)
+        # calculate the standard deviation for tprs
+        std_tpr = np.std(tprs, axis=0)
+        tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
+        tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
+        # plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2, label=r'$\pm$ 1 std.dev.')
+        plt.xlim([-0.05, 1.05])
+        plt.ylim([-0.05, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver operating characteristic')
+        plt.legend(loc='lower right')
+        path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        output_path = os.path.join(path, 'static/ROC.png')
+        output_path_kfold = os.path.join(path, 'static/kfold.png')
+        plt.savefig(output_path)
+        plt.clf()
+        # plot the k fold
+        fig, ax = plt.subplots()
+        bar_width = 0.2
+        N = 10
+        ind = np.arange(N)
+        rect_f1 = ax.bar(ind - 2 * bar_width, f1, bar_width, color='r', label='f1-score')
+        rect_recall = ax.bar(ind - bar_width, recall, bar_width, color='g', label='recall')
+        rect_precision = ax.bar(ind, precision, bar_width, color='b', label='precision')
+        rect_score = ax.bar(ind + bar_width, scores, bar_width, color='y', label='accuracy')
+        ax.set_xlabel('Folds')
+        ax.set_ylabel('Scores')
+        ax.set_title('Stratified 10 Fold Cross Validation')
+        ax.set_xticks(ind + bar_width / 2)
+        ax.set_xticklabels(('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'))
+        ax.legend()
+        fig.set_size_inches(15, 10)
+        fig.tight_layout()
+        plt.savefig(output_path_kfold)
+        plt.clf()
+        if dt == 'training':
+            # save cross validation and confusion matrix as a csv file
+            dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
+                              pd.DataFrame(precision, columns=['precision']),
+                              pd.DataFrame(recall, columns=['recall']),
+                              pd.DataFrame(f1, columns=['f1']),
+                              pd.DataFrame(dummies, columns=['dummies'])], axis=1)
+            dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
+            dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
+            dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')
+        # if create model button is clicked
+        if request.method == "POST":
+            delete_all_training()
+            dtobj['ket_lulus'] = dtobj['ket_lulus'].replace([0, 1], ['Tidak Tepat Waktu', 'Tepat Waktu'])
+            for i, row in dtobj.iterrows():
+                data = Training(
+                    id=row['id'],
+                    school_type=row['school_type'],
+                    gender=row['gender'],
+                    school_city=row['school_city'],
+                    # parent_salary=row['parent_salary'],
+                    semester_1=row['semester_1'],
+                    semester_2=row['semester_2'],
+                    semester_3=row['semester_3'],
+                    semester_4=row['semester_4'],
+                    ipk=row['ipk'],
+                    ket_lulus=row['ket_lulus']
+                )
+                save_to_db(data)
+            # save cross validation and confusion matrix as a csv file
+            dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
+                              pd.DataFrame(precision, columns=['precision']),
+                              pd.DataFrame(recall, columns=['recall']),
+                              pd.DataFrame(f1, columns=['f1']),
+                              pd.DataFrame(dummies, columns=['dummies'])], axis=1)
+            dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
+            dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
+            dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')
+            flash('Successfully create a model', 'success')
+            return redirect(url_for('dashboard.index'))
+        # < END POST REQUEST >
+        return render_template('cross_validation.html', scores=items, cf=cf, avg=avgitem, dt=dt)
+    except Exception as e:
+        flash('Error: {}'.format(e))
+        return redirect(url_for('dashboard.alumni'))
 
 
 @dashboard.route('/current_model')

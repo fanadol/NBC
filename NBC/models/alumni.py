@@ -8,6 +8,5 @@ class Alumni(db.Model):
     school_type = db.Column(db.String(10), nullable=False)
     gender = db.Column(db.String(1), nullable=False)
     school_city = db.Column(db.String(10), nullable=False)
-    parent_salary = db.Column(db.String(20), nullable=False)
     ket_lulus = db.Column(db.String(20), nullable=False)
-    nilai = db.relationship('Nilai', backref='alumni', lazy=True)
+    nilai = db.relationship('Nilai', backref='alumni', lazy=True, uselist=False)

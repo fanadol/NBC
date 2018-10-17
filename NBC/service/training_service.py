@@ -14,7 +14,7 @@ def get_a_training(id):
 
 
 def get_all_training():
-    selected_features = ['id', 'school_type', 'gender', 'school_city', 'parent_salary', 'semester_1', 'semester_2',
+    selected_features = ['id', 'school_type', 'gender', 'school_city', 'semester_1', 'semester_2',
                          'semester_3', 'semester_4', 'ipk', 'ket_lulus']
     datas = Training.query.all()
     frame = []
@@ -23,7 +23,6 @@ def get_all_training():
                       'school_type': data.school_type,
                       'gender': data.gender,
                       'school_city': data.school_city,
-                      'parent_salary': data.parent_salary,
                       'semester_1': data.semester_1,
                       'semester_2': data.semester_2,
                       'semester_3': data.semester_3,
@@ -41,7 +40,6 @@ def update_a_training(obj, updatedObj):
     obj.school_type = updatedObj['school_type']
     obj.gender = updatedObj['gender']
     obj.school_city = updatedObj['school_city']
-    obj.parent_salary = updatedObj['parent_salary']
     obj.semester_1 = updatedObj['semester_1']
     obj.semester_2 = updatedObj['semester_2']
     obj.semester_3 = updatedObj['semester_3']

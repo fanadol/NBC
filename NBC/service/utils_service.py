@@ -12,10 +12,9 @@ def clean_train_column(filename):
     Make data frame from csv file. Suit the column with what we need for making alumni table
     Also, change th column name so its readable
     """
-    col_names = ['NIM', 'Gender', 'Tipe Sekolah', 'Kota Sekolah', 'Tanggal Lulus', 'Lama Studi', 'Keterangan Lulus',
-                 'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4', 'Gaji Orang Tua']
+    col_names = ['NIM', 'Gender', 'Tipe Sekolah', 'Kota Sekolah', 'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4']
     df = pd.read_csv(filename, names=col_names, skiprows=1)
-    return df.drop(['Tanggal Lulus', 'Lama Studi'], axis=1)
+    return df
 
 
 def clean_train_school_type(df):
@@ -70,8 +69,8 @@ def clean_train_reorder_column(df):
     :param df:
     :return:
     """
-    features_alumni = ['NIM', 'Tipe Sekolah', 'Gender', 'Kota Sekolah', 'Gaji Orang Tua', 'Keterangan Lulus',
-                       'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4']
+    features_alumni = ['NIM', 'Tipe Sekolah', 'Gender', 'Kota Sekolah', 'IPS_1', 'IPS_2', 'IPS_3',
+                       'IPS_4']
     return df[features_alumni]
 
 
