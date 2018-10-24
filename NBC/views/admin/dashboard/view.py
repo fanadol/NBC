@@ -75,7 +75,7 @@ def create_user():
             role=role
         )
         save_to_db(data)
-        flash('User successfully created', 'success')
+        flash('User berhasil dibuat', 'success')
         return redirect(url_for('dashboard.create_user'))
     return render_template('admin_user_create.html')
 
@@ -156,23 +156,17 @@ def alumni():
                         school_type=row['Tipe Sekolah'],
                         gender=row['Gender'],
                         school_city=row['Kota Sekolah'],
-                        # parent_salary=row['Gaji Orang Tua'],
                         ket_lulus=row['Keterangan Lulus']
                     )
                     # make ipk
                     ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
-                    # discrete the IP value
-                    semester_1 = convert_nilai(row['IPS_1'])
-                    semester_2 = convert_nilai(row['IPS_2'])
-                    semester_3 = convert_nilai(row['IPS_3'])
-                    semester_4 = convert_nilai(row['IPS_4'])
-                    ipk = convert_nilai(ipk)
+                    # save the IP value
                     data_nilai = Nilai(
                         id_alumni=row['NIM'],
-                        semester_1=semester_1,
-                        semester_2=semester_2,
-                        semester_3=semester_3,
-                        semester_4=semester_4,
+                        semester_1=row['IPS_1'],
+                        semester_2=row['IPS_2'],
+                        semester_3=row['IPS_3'],
+                        semester_4=row['IPS_4'],
                         ipk=ipk
                     )
                     # check if the data already exist
@@ -198,46 +192,43 @@ def alumni():
 @login_required
 def create_alumni():
     if request.method == "POST":
-        # get data from form
-        id = request.form.get('id')
-        semester_1 = request.form.get('semester_1')
-        semester_2 = request.form.get('semester_2')
-        semester_3 = request.form.get('semester_3')
-        semester_4 = request.form.get('semester_4')
-        ipk = (semester_1 + semester_2 + semester_3 + semester_4) / 4
-        # change the value into categorical
-        semester_1 = convert_nilai(semester_1)
-        semester_2 = convert_nilai(semester_2)
-        semester_3 = convert_nilai(semester_3)
-        semester_4 = convert_nilai(semester_4)
-        ipk = convert_nilai(ipk)
-        # check if the nim is conflict or not
-        exst = Alumni.query.filter_by(id=id).first()
-        if exst:
-            flash('Error: NIM Conflict!', 'danger')
+        try:
+            # get data from form
+            id = request.form.get('angkatan') + '.11.' + request.form.get('id').zfill(4)
+            semester_1 = float(request.form.get('semester_1'))
+            semester_2 = float(request.form.get('semester_2'))
+            semester_3 = float(request.form.get('semester_3'))
+            semester_4 = float(request.form.get('semester_4'))
+            ipk = (semester_1 + semester_2 + semester_3 + semester_4) / 4
+            # check if the nim is conflict or not
+            exst = Alumni.query.filter_by(id=id).first()
+            if exst:
+                flash('Error: NIM Conflict!', 'danger')
+                return redirect(request.url)
+            # make an Alumni model object
+            que_alumni = Alumni(
+                id=id,
+                school_type=request.form.get('school_type'),
+                gender=request.form.get('gender'),
+                school_city=request.form.get('school_city'),
+                ket_lulus=request.form.get('ket_lulus')
+            )
+            que_nilai = Nilai(
+                id_alumni=id,
+                semester_1=semester_1,
+                semester_2=semester_2,
+                semester_3=semester_3,
+                semester_4=semester_4,
+                ipk=ipk
+            )
+            # insert into database
+            save_to_db(que_alumni)
+            save_to_db(que_nilai)
+            flash('Success membuat data alumni.', 'success')
+            return redirect(url_for('dashboard.create_alumni'))
+        except Exception as e:
+            flash('Error: {}'.format(e))
             return redirect(request.url)
-        # make an Alumni model object
-        que_alumni = Alumni(
-            id=id,
-            school_type=request.form.get('school_type'),
-            gender=request.form.get('gender'),
-            school_city=request.form.get('school_city'),
-            # parent_salary=request.form.get('parent_salary'),
-            ket_lulus=request.form.get('ket_lulus')
-        )
-        que_nilai = Nilai(
-            id_alumni=id,
-            semester_1=semester_1,
-            semester_2=semester_2,
-            semester_3=semester_3,
-            semester_4=semester_4,
-            ipk=ipk
-        )
-        # insert into database
-        save_to_db(que_alumni)
-        save_to_db(que_nilai)
-        flash('Success membuat data alumni.', 'success')
-        return redirect(url_for('dashboard.create_alumni'))
     return render_template('admin_create_alumni.html')
 
 
@@ -260,14 +251,15 @@ def edit_alumni(id):
                 'ket_lulus': request.form.get('ket_lulus')
             }
             updated_nilai = {
-                'semester_1': request.form.get('semester_1'),
-                'semester_2': request.form.get('semester_2'),
-                'semester_3': request.form.get('semester_3'),
-                'semester_4': request.form.get('semester_4'),
-                'ipk': request.form.get('ipk')
+                'semester_1': float(request.form.get('semester_1')),
+                'semester_2': float(request.form.get('semester_2')),
+                'semester_3': float(request.form.get('semester_3')),
+                'semester_4': float(request.form.get('semester_4')),
+                'ipk': float(request.form.get('ipk'))
             }
             update_a_nilai(ni, updated_nilai)
             update_an_alumni(al, updated_alumni)
+            flash('Alumni berhasil diubah.', 'success')
             return redirect(url_for('dashboard.alumni'))
         except Exception as e:
             flash('Error: {}'.format(e), 'danger')
@@ -283,7 +275,7 @@ def delete_alumni():
         exst = Alumni.query.filter_by(id=id).first()
         if exst:
             delete_an_alumni(id)
-            flash('Alumni success dihapus.', 'success')
+            flash('Alumni berhasil dihapus.', 'success')
             return redirect(url_for('dashboard.alumni'))
         else:
             flash('Error: Data did not exist.', 'danger')
@@ -318,23 +310,16 @@ def training():
                 for index, row in csv.iterrows():
                     # make ipk
                     ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
-                    # discrete the IP value
-                    semester_1 = convert_nilai(row['IPS_1'])
-                    semester_2 = convert_nilai(row['IPS_2'])
-                    semester_3 = convert_nilai(row['IPS_3'])
-                    semester_4 = convert_nilai(row['IPS_4'])
-                    ipk = convert_nilai(ipk)
                     data_training = Training(
                         id=row['NIM'],
                         school_type=row['Tipe Sekolah'],
                         gender=row['Gender'],
                         school_city=row['Kota Sekolah'],
-                        # parent_salary=row['Gaji Orang Tua'],
                         ket_lulus=row['Keterangan Lulus'],
-                        semester_1=semester_1,
-                        semester_2=semester_2,
-                        semester_3=semester_3,
-                        semester_4=semester_4,
+                        semester_1=row['IPS_1'],
+                        semester_2=row['IPS_2'],
+                        semester_3=row['IPS_3'],
+                        semester_4=row['IPS_4'],
                         ipk=ipk
                     )
                     # check if the data already exist
@@ -369,11 +354,11 @@ def edit_training(id):
                 'school_city': request.form.get('school_city'),
                 # 'parent_salary': request.form.get('parent_salary'),
                 'ket_lulus': request.form.get('ket_lulus'),
-                'semester_1': request.form.get('semester_1'),
-                'semester_2': request.form.get('semester_2'),
-                'semester_3': request.form.get('semester_3'),
-                'semester_4': request.form.get('semester_4'),
-                'ipk': request.form.get('ipk')
+                'semester_1': float(request.form.get('semester_1')),
+                'semester_2': float(request.form.get('semester_2')),
+                'semester_3': float(request.form.get('semester_3')),
+                'semester_4': float(request.form.get('semester_4')),
+                'ipk': float(request.form.get('ipk'))
             }
             update_a_training(tr, updated_training)
             flash('Data Training berhasil di edit.', 'success')
@@ -407,7 +392,7 @@ def predict():
     # from delete button
     if request.method == "POST":
         delete_all_prediction()
-        flash('Data telah berhasil di delete', 'success')
+        flash('Data telah berhasil dihapus', 'success')
         return redirect(request.url)
     return render_template('admin_data_predict.html', data=pred_data, len_data=len_data, modal_for='prediksi')
 
@@ -431,22 +416,16 @@ def create_predict():
             semester_4 = float(request.form.get('semester_4'))
             ipk = (semester_1 + semester_2 + semester_3 + semester_4) / 4
             # change the value into categorical
-            semester_1 = convert_nilai(semester_1)
-            semester_2 = convert_nilai(semester_2)
-            semester_3 = convert_nilai(semester_3)
-            semester_4 = convert_nilai(semester_4)
-            ipk = convert_nilai(ipk)
             test_data = {
                 'id': id,
                 'school_type': request.form.get('school_type'),
                 'gender': request.form.get('gender'),
                 'school_city': request.form.get('school_city'),
-                # 'parent_salary': request.form.get('parent_salary'),
-                'semester_1': semester_1,
-                'semester_2': semester_2,
-                'semester_3': semester_3,
-                'semester_4': semester_4,
-                'ipk': ipk
+                'semester_1': convert_nilai(semester_1),
+                'semester_2': convert_nilai(semester_2),
+                'semester_3': convert_nilai(semester_3),
+                'semester_4': convert_nilai(semester_4),
+                'ipk': convert_nilai(ipk)
             }
             exst = Testing.query.filter_by(id=id).first()
             # if already in databases, return with alert error
@@ -484,11 +463,11 @@ def create_predict():
                 gender=test_data['gender'],
                 school_city=test_data['school_city'],
                 # parent_salary=test_data['parent_salary'],
-                semester_1=test_data['semester_1'],
-                semester_2=test_data['semester_2'],
-                semester_3=test_data['semester_3'],
-                semester_4=test_data['semester_4'],
-                ipk=test_data['ipk']
+                semester_1=semester_1,
+                semester_2=semester_2,
+                semester_3=semester_3,
+                semester_4=semester_4,
+                ipk=ipk
             )
             que_hasil = Hasil(
                 id_testing=test_data['id'],
@@ -528,28 +507,44 @@ def predict_csv():
                 csv = pd.read_csv(path)
                 # make list of dict
                 pred_list = []
+                temp_nilai = []
                 for index, row in csv.iterrows():
+                    ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
                     pred_list.append({
                         'id': row['NIM'],
                         'school_type': row['Tipe Sekolah'],
                         'gender': row['Gender'],
                         'school_city': row['Kota Sekolah'],
-                        # 'parent_salary': row['Gaji Orang Tua'],
                         'semester_1': row['IPS_1'],
                         'semester_2': row['IPS_2'],
                         'semester_3': row['IPS_3'],
                         'semester_4': row['IPS_4'],
-                        'ipk': ((row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4)
+                        'ipk': ipk
                     })
-                selected_features = ['school_type', 'gender', 'school_city', 'semester_1',
-                                     'semester_2', 'semester_3', 'semester_4', 'ipk']
+                    # save the data into database
+                    obj_testing = Testing(
+                        id=row['id'],
+                        school_type=row['Tipe Sekolah'],
+                        gender=row['Gender'],
+                        school_city=row['Kota Sekolah'],
+                        semester_1=row['IPS_1'],
+                        semester_2=row['IPS_2'],
+                        semester_3=row['IPS_3'],
+                        semester_4=row['IPS_4'],
+                        ipk=ipk
+                    )
+                    save_to_db(obj_testing)
+                    # END FOR
+                # selected_features = ['school_type', 'gender', 'school_city', 'semester_1',
+                #                      'semester_2', 'semester_3', 'semester_4', 'ipk']
                 data_test = pd.DataFrame(pred_list)
                 # change the value of nilai to discret
                 data_test = clean_train_discretization(data_test,
                                                        ['semester_1', 'semester_2', 'semester_3', 'semester_4', 'ipk'])
-                data_target = data_test[selected_features]
+                # data_target = data_test[selected_features]
                 train_data['ket_lulus'] = train_data['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-                df_concat = pd.concat([train_data, data_target], keys=['train', 'test'], sort=True).fillna(0)
+                df_concat = pd.concat([train_data, data_test.drop('id', axis=1)], keys=['train', 'test'],
+                                      sort=True).fillna(0)
                 df_concat['ket_lulus'] = df_concat['ket_lulus'].astype(int)
                 enc = pd.get_dummies(df_concat)
                 x = enc.loc['train'].drop('ket_lulus', axis=1)
@@ -565,23 +560,10 @@ def predict_csv():
                 # combine the result and the data
                 dfr = pd.concat([data_test, y_pred], axis=1, sort=True)
                 for i, row in dfr.iterrows():
-                    obj_testing = Testing(
-                        id=row['id'],
-                        school_type=row['school_type'],
-                        gender=row['gender'],
-                        school_city=row['school_city'],
-                        # parent_salary=row['parent_salary'],
-                        semester_1=row['semester_1'],
-                        semester_2=row['semester_2'],
-                        semester_3=row['semester_3'],
-                        semester_4=row['semester_4'],
-                        ipk=row['ipk']
-                    )
                     obj_hasil = Hasil(
                         id_testing=row['id'],
                         result=row['result']
                     )
-                    save_to_db(obj_testing)
                     save_to_db(obj_hasil)
                 flash('Prediksi Berhasil', 'success')
                 return redirect(url_for('dashboard.predict'))
@@ -624,7 +606,6 @@ def cross_validation(dt):
         x = np.array(enc.drop('ket_lulus', axis=1))
         y = np.array(enc['ket_lulus'])
         # create the model
-        dummy = DummyClassifier(strategy='most_frequent')
         model = MultinomialNB()
         # cross validation
         kf = KFold(n_splits=10)
@@ -633,7 +614,6 @@ def cross_validation(dt):
         recall = []
         precision = []
         scores = []
-        dummies = []
         tprs = []
         aucs = []
         # make number with linspace between 0 and 1 with percentage.
@@ -645,7 +625,6 @@ def cross_validation(dt):
             x_train, x_test = x[train_index], x[test_index]
             y_train, y_test = y[train_index], y[test_index]
             # fit the model, then predict the test fold
-            dummy.fit(x_train, y_train)
             model.fit(x_train, y_train)
             y_pred = model.predict(x_test)
             y_prob = model.predict_proba(x_test)[:, 1]
@@ -663,18 +642,17 @@ def cross_validation(dt):
             f1.append(f1_score(y_test, y_pred, average='macro'))
             recall.append(recall_score(y_test, y_pred, average='macro'))
             precision.append(precision_score(y_test, y_pred, average='macro'))
-            dummies.append(dummy.score(x_test, y_test))
             score = model.score(x_test, y_test)
             scores.append(score)
             i += 1
         # put all scores inside a dict
         items = []
         for i in range(len(scores)):
-            item = dict(numb=i + 1, f1=f1[i], precision=precision[i], recall=recall[i], score=scores[i], dummy=dummies[i])
+            item = dict(numb=i + 1, f1=f1[i], precision=precision[i], recall=recall[i], score=scores[i])
             items.append(item)
         # put the average inside a dict
         avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
-                        avg_recall=np.average(recall), avg_score=np.average(scores), avg_dummy=np.average(dummies))]
+                        avg_recall=np.average(recall), avg_score=np.average(scores))]
         # plot the ROC Curve, then save it into image file
         plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', alpha=.8)
         mean_tpr = np.mean(tprs, axis=0)
@@ -753,8 +731,7 @@ def cross_validation(dt):
             dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
                               pd.DataFrame(precision, columns=['precision']),
                               pd.DataFrame(recall, columns=['recall']),
-                              pd.DataFrame(f1, columns=['f1']),
-                              pd.DataFrame(dummies, columns=['dummies'])], axis=1)
+                              pd.DataFrame(f1, columns=['f1'])])
             dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
             dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
             dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')

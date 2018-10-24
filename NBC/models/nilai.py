@@ -6,8 +6,8 @@ class Nilai(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_alumni = db.Column(db.String(11), db.ForeignKey('alumni.id'))
-    semester_1 = db.Column(db.String(1), nullable=False)
-    semester_2 = db.Column(db.String(1), nullable=False)
-    semester_3 = db.Column(db.String(1), nullable=False)
-    semester_4 = db.Column(db.String(1), nullable=False)
-    ipk = db.Column(db.String(1), nullable=False)
+    semester_1 = db.Column(db.Float, nullable=False)
+    semester_2 = db.Column(db.Float, nullable=False)
+    semester_3 = db.Column(db.Float, nullable=False)
+    semester_4 = db.Column(db.Float, nullable=False)
+    ipk = db.Column(db.Float, nullable=False)
