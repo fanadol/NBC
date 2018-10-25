@@ -3,9 +3,6 @@ __pycache__/
 migrations
 node_modules
 bower_components
-alumni/
-prediksi/
-training/
 current_model_cf.csv
 current_model_cv.csv
 kfold.png
