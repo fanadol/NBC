@@ -7,7 +7,7 @@ import matplotlib
 from sklearn.dummy import DummyClassifier
 from werkzeug.utils import secure_filename
 
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_curve, auc
@@ -29,7 +29,8 @@ from NBC.service.user_service import get_all_users, get_an_user, update_an_user,
 from NBC.service.database_service import save_to_db
 from NBC.models.user import User
 from NBC.config import Config
-from NBC.service.utils_service import allowed_file, get_data_length, clean_train_discretization
+from NBC.service.utils_service import allowed_file, get_data_length, clean_train_discretization, grouping_school_type, \
+    grouping_school_city
 
 matplotlib.use('agg')
 
@@ -40,6 +41,56 @@ import matplotlib.pyplot as plt
 @login_required
 def index():
     return redirect(url_for('dashboard.alumni'))
+
+
+@dashboard.route('/preprocessing', methods=["GET", "POST"])
+@login_required
+def preprocessing():
+    if request.method == "POST":
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No File Choosen', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No File Choosen', 'danger')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            try:
+                timestr = time.strftime("%Y%m%d")
+                filename = timestr + "_" + secure_filename(file.filename)
+                path_upload = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing", filename)
+                file.save(path_upload)
+                csv = pd.read_csv(path_upload)
+                # based on rule you should never modify what you are iterating over
+                mylist = []
+                for i, row in csv.iterrows():
+                    mylist.append({
+                        'NIM': row['NIM'],
+                        'Tipe Sekolah': grouping_school_type(row['Tipe Sekolah']),
+                        'Gender': row['Gender'],
+                        'Kota Sekolah': grouping_school_city(row['Kota Sekolah']),
+                        'IPS_1': row['IPS_1'],
+                        'IPS_2': row['IPS_2'],
+                        'IPS_3': row['IPS_3'],
+                        'IPS_4': row['IPS_4'],
+                        'Keterangan Lulus': row['Keterangan Lulus']
+                    })
+                df = pd.DataFrame(mylist)
+                # sort the column
+                features = ['NIM', 'Tipe Sekolah', 'Gender', 'Kota Sekolah', 'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4']
+                df = df[features]
+                path_save = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing_result",
+                                         filename)
+                path_download = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing_result")
+                df.to_csv(path_save, index=False, encoding='utf-8')
+                return send_from_directory(directory=path_download, filename=filename, as_attachment=True)
+            except Exception as e:
+                flash('Error: {}'.format(e), 'danger')
+                return redirect(url_for('dashboard.alumni'))
+    return render_template('admin_preprocessing.html')
 
 
 @dashboard.route('/users', methods=["GET", "POST"])
@@ -150,6 +201,12 @@ def alumni():
                 path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "alumni", filename)
                 file.save(path)
                 csv = pd.read_csv(path)
+                for i, row in csv.iterrows():
+                    # check if the data already exist
+                    exst = Alumni.query.filter_by(id=row['NIM']).first()
+                    if exst:
+                        flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
+                        return redirect(request.url)
                 for index, row in csv.iterrows():
                     data_alumni = Alumni(
                         id=row['NIM'],
@@ -169,14 +226,8 @@ def alumni():
                         semester_4=row['IPS_4'],
                         ipk=ipk
                     )
-                    # check if the data already exist
-                    exst = Alumni.query.filter_by(id=row['NIM']).first()
-                    if not exst:
-                        save_to_db(data_alumni)
-                        save_to_db(data_nilai)
-                    else:
-                        flash('Some id is duplicated!, please check again!', 'danger')
-                        return redirect(request.url)
+                    save_to_db(data_alumni)
+                    save_to_db(data_nilai)
                 flash('Successfully menambahkan data alumni', 'success')
                 return redirect(request.url)
             except Exception as e:
@@ -255,7 +306,8 @@ def edit_alumni(id):
                 'semester_2': float(request.form.get('semester_2')),
                 'semester_3': float(request.form.get('semester_3')),
                 'semester_4': float(request.form.get('semester_4')),
-                'ipk': float(request.form.get('ipk'))
+                'ipk': (float(request.form.get('semester_1')) + float(request.form.get('semester_2')) + float(
+                    request.form.get('semester_3')) + float(request.form.get('semester_4'))) / 4
             }
             update_a_nilai(ni, updated_nilai)
             update_an_alumni(al, updated_alumni)
@@ -307,6 +359,12 @@ def training():
                 path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "training", filename)
                 file.save(path)
                 csv = pd.read_csv(path)
+                for i, row in csv.iterrows():
+                    # check if the data already exist
+                    exst = Training.query.filter_by(id=row['NIM']).first()
+                    if exst:
+                        flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
+                        return redirect(request.url)
                 for index, row in csv.iterrows():
                     # make ipk
                     ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
@@ -322,13 +380,7 @@ def training():
                         semester_4=row['IPS_4'],
                         ipk=ipk
                     )
-                    # check if the data already exist
-                    exst = Training.query.filter_by(id=row['NIM']).first()
-                    if not exst:
-                        save_to_db(data_training)
-                    else:
-                        flash('Some id is duplicated!, please check again!', 'danger')
-                        return redirect(request.url)
+                    save_to_db(data_training)
                 flash('Success menambahkan data alumni', 'success')
                 return redirect(url_for('dashboard.cross_validation', dt='training'))
             except Exception as e:
@@ -344,7 +396,6 @@ def training():
 @login_required
 def edit_training(id):
     tr = get_a_training(id)
-    category_parent_salary = ['Sangat Rendah', 'Rendah', 'Cukup Rendah', 'Cukup Tinggi', 'Tinggi', 'Sangat Tinggi']
     if request.method == "POST":
         try:
             updated_training = {
@@ -352,13 +403,13 @@ def edit_training(id):
                 'school_type': request.form.get('school_type'),
                 'gender': request.form.get('gender'),
                 'school_city': request.form.get('school_city'),
-                # 'parent_salary': request.form.get('parent_salary'),
                 'ket_lulus': request.form.get('ket_lulus'),
                 'semester_1': float(request.form.get('semester_1')),
                 'semester_2': float(request.form.get('semester_2')),
                 'semester_3': float(request.form.get('semester_3')),
                 'semester_4': float(request.form.get('semester_4')),
-                'ipk': float(request.form.get('ipk'))
+                'ipk': (float(request.form.get('semester_1')) + float(request.form.get('semester_2')) + float(
+                    request.form.get('semester_3')) + float(request.form.get('semester_4'))) / 4
             }
             update_a_training(tr, updated_training)
             flash('Data Training berhasil di edit.', 'success')
@@ -366,7 +417,7 @@ def edit_training(id):
         except Exception as e:
             flash('Error: {}'.format(e), 'danger')
             return redirect(request.url)
-    return render_template('admin_edit_training.html', latih=tr, category=category_parent_salary)
+    return render_template('admin_edit_training.html', latih=tr)
 
 
 @dashboard.route('/training/delete', methods=["POST"])
@@ -404,11 +455,16 @@ def create_predict():
     train_data = get_all_training()
     if request.method == "POST":
         try:
-            # get the data from frontend form
-            id = request.form.get('id')
-            # check if the nim already in databases
-            if not id:
+            if not request.form.get('id'):
                 flash('Fill all empty form!', 'danger')
+                return redirect(request.url)
+            # get the data from frontend form
+            id = request.form.get('angkatan') + '.11.' + request.form.get('id')
+            # check if the nim already in databases
+            exst = Testing.query.filter_by(id=id).first()
+            # if already in databases, return with alert error
+            if exst:
+                flash('Error, NIM Duplicated!', 'danger')
                 return redirect(request.url)
             semester_1 = float(request.form.get('semester_1'))
             semester_2 = float(request.form.get('semester_2'))
@@ -427,11 +483,6 @@ def create_predict():
                 'semester_4': convert_nilai(semester_4),
                 'ipk': convert_nilai(ipk)
             }
-            exst = Testing.query.filter_by(id=id).first()
-            # if already in databases, return with alert error
-            if exst:
-                flash('Error, NIM Duplicated!', 'danger')
-                return redirect(request.url)
             # make dataframe from test data
             df = pd.DataFrame(test_data, index=[0])
             # replace the train ket_lulus into number
@@ -480,7 +531,7 @@ def create_predict():
         except Exception as e:
             flash('Error: {}'.format(e), 'danger')
             return redirect(request.url)
-    return render_template('admin_prediksi_create.html')
+    return render_template('admin_create_prediksi.html')
 
 
 @dashboard.route('/prediction/csv', methods=["GET", "POST"])
@@ -505,25 +556,20 @@ def predict_csv():
                 path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "prediksi", filename)
                 file.save(path)
                 csv = pd.read_csv(path)
+                for i, row in csv.iterrows():
+                    exst = Testing.query.filter_by(id=row['NIM']).first()
+                    if exst:
+                        flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
+                        return redirect(request.url)
+                    # END FOR
                 # make list of dict
                 pred_list = []
-                temp_nilai = []
                 for index, row in csv.iterrows():
                     ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
-                    pred_list.append({
-                        'id': row['NIM'],
-                        'school_type': row['Tipe Sekolah'],
-                        'gender': row['Gender'],
-                        'school_city': row['Kota Sekolah'],
-                        'semester_1': row['IPS_1'],
-                        'semester_2': row['IPS_2'],
-                        'semester_3': row['IPS_3'],
-                        'semester_4': row['IPS_4'],
-                        'ipk': ipk
-                    })
                     # save the data into database
+                    # the reason is, i want to store the value with number data type, not discret.
                     obj_testing = Testing(
-                        id=row['id'],
+                        id=row['NIM'],
                         school_type=row['Tipe Sekolah'],
                         gender=row['Gender'],
                         school_city=row['Kota Sekolah'],
@@ -534,14 +580,20 @@ def predict_csv():
                         ipk=ipk
                     )
                     save_to_db(obj_testing)
+                    # convert all IP and insert it to list
+                    pred_list.append({
+                        'id': row['NIM'],
+                        'school_type': row['Tipe Sekolah'],
+                        'gender': row['Gender'],
+                        'school_city': row['Kota Sekolah'],
+                        'semester_1': convert_nilai(row['IPS_1']),
+                        'semester_2': convert_nilai(row['IPS_2']),
+                        'semester_3': convert_nilai(row['IPS_3']),
+                        'semester_4': convert_nilai(row['IPS_4']),
+                        'ipk': convert_nilai(ipk)
+                    })
                     # END FOR
-                # selected_features = ['school_type', 'gender', 'school_city', 'semester_1',
-                #                      'semester_2', 'semester_3', 'semester_4', 'ipk']
                 data_test = pd.DataFrame(pred_list)
-                # change the value of nilai to discret
-                data_test = clean_train_discretization(data_test,
-                                                       ['semester_1', 'semester_2', 'semester_3', 'semester_4', 'ipk'])
-                # data_target = data_test[selected_features]
                 train_data['ket_lulus'] = train_data['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
                 df_concat = pd.concat([train_data, data_test.drop('id', axis=1)], keys=['train', 'test'],
                                       sort=True).fillna(0)
@@ -602,9 +654,26 @@ def cross_validation(dt):
             dtobj = get_all_training()
         # one hot encoder
         dtobj['ket_lulus'] = dtobj['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-        enc = pd.get_dummies(dtobj.drop(['id'], axis=1))
+        # i dont know how to chagne the value, so i make a list
+        mydf = []
+        for i, row in dtobj.iterrows():
+            mydf.append({
+                'id': row['id'],
+                'school_type': row['school_type'],
+                'gender': row['gender'],
+                'school_city': row['school_city'],
+                'semester_1': convert_nilai(row['semester_1']),
+                'semester_2': convert_nilai(row['semester_2']),
+                'semester_3': convert_nilai(row['semester_3']),
+                'semester_4': convert_nilai(row['semester_4']),
+                'ipk': convert_nilai(row['ipk']),
+                'ket_lulus': row['ket_lulus']
+            })
+        df = pd.DataFrame(mydf)
+        enc = pd.get_dummies(df.drop(['id'], axis=1))
         x = np.array(enc.drop('ket_lulus', axis=1))
         y = np.array(enc['ket_lulus'])
+        labels = np.unique(y)
         # create the model
         model = MultinomialNB()
         # cross validation
@@ -614,37 +683,20 @@ def cross_validation(dt):
         recall = []
         precision = []
         scores = []
-        tprs = []
-        aucs = []
-        # make number with linspace between 0 and 1 with percentage.
-        # e.g -> 0, 1%, 2% ... 99%, 100%
-        mean_fpr = np.linspace(0, 1, 100)
-        plt.figure(figsize=(15, 10))
-        i = 1
         for train_index, test_index in kf.split(x):
             x_train, x_test = x[train_index], x[test_index]
             y_train, y_test = y[train_index], y[test_index]
             # fit the model, then predict the test fold
             model.fit(x_train, y_train)
             y_pred = model.predict(x_test)
-            y_prob = model.predict_proba(x_test)[:, 1]
             # compute confusion matrix, ROC curve and AUC
-            cf += confusion_matrix(y_test, y_pred)
-            fpr, tpr, thresholds = roc_curve(y_test, y_prob)
-            tprs.append(interp(mean_fpr, fpr, tpr))
-            tprs[-1][0] = 0.0
-            # compute the auc using fpr and tpr
-            roc_auc = auc(fpr, tpr)
-            aucs.append(roc_auc)
-            # plot it
-            plt.plot(fpr, tpr, lw=1, alpha=0.5, label='ROC fold %d (AUC = %0.2f)' % (i, roc_auc))
+            cf += confusion_matrix(y_test, y_pred, labels=labels)
             # calculate the accuracy, f1-score, recall, precision
             f1.append(f1_score(y_test, y_pred, average='macro'))
             recall.append(recall_score(y_test, y_pred, average='macro'))
             precision.append(precision_score(y_test, y_pred, average='macro'))
             score = model.score(x_test, y_test)
             scores.append(score)
-            i += 1
         # put all scores inside a dict
         items = []
         for i in range(len(scores)):
@@ -653,32 +705,8 @@ def cross_validation(dt):
         # put the average inside a dict
         avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
                         avg_recall=np.average(recall), avg_score=np.average(scores))]
-        # plot the ROC Curve, then save it into image file
-        plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', alpha=.8)
-        mean_tpr = np.mean(tprs, axis=0)
-        mean_tpr[-1] = 1
-        # mean of the auc (from mean false positive rate and mean true positive rate)
-        mean_auc = auc(mean_fpr, mean_tpr)
-        # calculate the standard deviation for aucs
-        std_auc = np.std(aucs)
-        plt.plot(mean_fpr, mean_tpr, color='b', label=r'Mean ROC (AUC = %0.2f)' % (mean_auc),
-                 lw=2, alpha=.8)
-        # calculate the standard deviation for tprs
-        std_tpr = np.std(tprs, axis=0)
-        tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
-        tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-        # plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2, label=r'$\pm$ 1 std.dev.')
-        plt.xlim([-0.05, 1.05])
-        plt.ylim([-0.05, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic')
-        plt.legend(loc='lower right')
         path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        output_path = os.path.join(path, 'static/ROC.png')
         output_path_kfold = os.path.join(path, 'static/kfold.png')
-        plt.savefig(output_path)
-        plt.clf()
         # plot the k fold
         fig, ax = plt.subplots()
         bar_width = 0.2
@@ -703,8 +731,7 @@ def cross_validation(dt):
             dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
                               pd.DataFrame(precision, columns=['precision']),
                               pd.DataFrame(recall, columns=['recall']),
-                              pd.DataFrame(f1, columns=['f1']),
-                              pd.DataFrame(dummies, columns=['dummies'])], axis=1)
+                              pd.DataFrame(f1, columns=['f1'])], axis=1)
             dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
             dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
             dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')
@@ -718,7 +745,6 @@ def cross_validation(dt):
                     school_type=row['school_type'],
                     gender=row['gender'],
                     school_city=row['school_city'],
-                    # parent_salary=row['parent_salary'],
                     semester_1=row['semester_1'],
                     semester_2=row['semester_2'],
                     semester_3=row['semester_3'],
@@ -740,7 +766,7 @@ def cross_validation(dt):
         # < END POST REQUEST >
         return render_template('cross_validation.html', scores=items, cf=cf, avg=avgitem, dt=dt)
     except Exception as e:
-        flash('Error: {}'.format(e))
+        flash('Error: {}'.format(e), 'danger')
         return redirect(url_for('dashboard.alumni'))
 
 

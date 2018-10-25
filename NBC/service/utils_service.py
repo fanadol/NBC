@@ -82,6 +82,19 @@ def clean_train_school_city(df):
             df.iloc[i] = df.iloc[i].replace(df.iloc[i], 'Luar Kota')
     return df
 
+def grouping_school_city(data):
+    if 'yogya' in data.lower():
+        return 'Dalam Kota'
+    else:
+        return 'Luar Kota'
+
+def grouping_school_type(data):
+    if 'smk' in data.lower():
+        return 'SMK'
+    elif 'sma' in data.lower():
+        return 'SMA'
+    else:
+        return 'Lain'
 
 def clean_train_ipk(df):
     # multiple the ips 1 until ips 4 then assign to ipk

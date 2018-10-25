@@ -21,8 +21,22 @@ Buat Data Prediksi
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="form-group">
+                                <label for="angkatan">Angkatan</label>
+                                <select name="angkatan" id="angkatan" class="form-control">
+                                    <option value="10" selected>2010</option>
+                                    <option value="11">2011</option>
+                                    <option value="12">2012</option>
+                                    <option value="13">2013</option>
+                                    <option value="14">2014</option>
+                                    <option value="15">2015</option>
+                                    <option value="16">2016</option>
+                                    <option value="17">2017</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label for="id">NIM</label>
-                                <input type="text" class="form-control" name="id" id="id" placeholder="NIM">
+                                <input type="number" min=0 max=9999 class="form-control" name="id" id="id"
+                                       placeholder="xxxx">
                             </div>
                             <div class="form-group">
                                 <label for="tipesekolah">Tipe Sekolah</label>
@@ -45,45 +59,34 @@ Buat Data Prediksi
                                     <option value="Luar Kota">Luar Kota</option>
                                 </select>
                             </div>
-                            <!--<div class="form-group">-->
-                                <!--<label for="gajiorangtua">Gaji Orang Tua</label>-->
-                                <!--<select name="parent_salary" id="gajiorangtua" class="form-control">-->
-                                    <!--<option value="Sangat Rendah" selected>Sangat Rendah</option>-->
-                                    <!--<option value="Rendah">Rendah</option>-->
-                                    <!--<option value="Cukup Rendah">Cukup Rendah</option>-->
-                                    <!--<option value="Cukup Tinggi">Cukup Tinggi</option>-->
-                                    <!--<option value="Tinggi">Tinggi</option>-->
-                                    <!--<option value="Sangat Tinggi">Sangat Tinggi</option>-->
-                                <!--</select>-->
-                            <!--</div>-->
                         </div>
                         <div class="col-lg-6">
                             <div class="form-group row">
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <label for="ips1">IP Semester 1</label>
-                                    <input type="text" class="form-control" name="semester_1" id="ips1"
-                                           placeholder="x.xx" maxlength="4">
+                                    <input type="number" step="0.01" min=0 max=4 class="form-control" name="semester_1"
+                                           id="ips1" placeholder="x.xx" maxlength="4">
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <label for="ips2">IP Semester 2</label>
-                                    <input type="text" class="form-control" name="semester_2" id="ips2"
-                                           placeholder="x.xx" maxlength="4">
+                                    <input type="number" step="0.01" min=0 max=4 class="form-control" name="semester_2"
+                                           id="ips2" placeholder="x.xx" maxlength="4">
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <label for="ips3">IP Semester 3</label>
-                                    <input type="text" class="form-control" name="semester_3" id="ips3"
-                                           placeholder="x.xx" maxlength="4">
+                                    <input type="number" step="0.01" min=0 max=4 class="form-control" name="semester_3"
+                                           id="ips3" placeholder="x.xx" maxlength="4">
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <label for="ips4">IP Semester 4</label>
-                                    <input type="text" class="form-control" name="semester_4" id="ips4"
-                                           placeholder="x.xx" maxlength="4">
+                                    <input type="number" step="0.01" min=0 max=4 class="form-control" name="semester_4"
+                                           id="ips4" placeholder="x.xx" maxlength="4">
                                 </div>
                             </div>
                         </div>

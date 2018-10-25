@@ -1,0 +1,39 @@
+{% extends 'template.html' %}
+
+{% block title %}
+Admin - Preprocessing
+{% endblock %}
+
+{% block subtitle %}
+Preprocessing
+{% endblock %}
+
+{% block content %}
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Preprocessing
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <p>Silahkan unggah data mentah anda untuk dilakukan data selection, dan grouping</p>
+                <p>Pastikan header kolom anda bernama seperti contoh:</p>
+                <pre>|NIM|Tipe Sekolah|Gender|Kota Sekolah|IPS_1|IPS_2|IPS_3|IPS_4|Keterangan Lulus|</pre>
+                <p><b>NOTE</b>: Header kolom bersifat <b><i>case sensitif</i></b>, urutan tidak harus sesuai.</p>
+                <p>Untuk header kolom variabel yang lain dibiarkan saja.</p>
+                <form action="" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file">
+                    <br>
+                    <button class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->
+{% endblock %}

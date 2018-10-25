@@ -26,7 +26,6 @@ Model Score
                         <th>Precision</th>
                         <th>Recall</th>
                         <th>F1-Score</th>
-                        <th>Dummy Score</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -37,7 +36,6 @@ Model Score
                         <td>{{ score.precision }}</td>
                         <td>{{ score.recall }}</td>
                         <td>{{ score.f1 }}</td>
-                        <td>{{ score.dummy }}</td>
                     </tr>
                     {% endfor %}
                     {% for avg in avg %}
@@ -106,28 +104,28 @@ Model Score
 </div>
 <div class="row">
     <div class="col-lg-12">
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                ROC Curve
-            </div>
-            <!-- /.panel-heading -->
-            <div class="panel-body">
-                <div class="table-responsive">
-                    <img src="/static/ROC.png" alt="ROC" class="img-responsive">
-                </div>
-                <!-- /.table-responsive -->
-                {% if dt == 'alumni' %}
-                <div class="well">
-                    <h4>Caution</h4>
-                    <p>Pastikan akurasi dari model cukup bagus untuk digunakan.</p>
-                    <form method="post">
-                        <button class="btn btn-default btn-lg btn-block" type="submit">Buat Model</button>
-                    </form>
-                </div>
-                {% endif %}
-            </div>
-            <!-- /.panel-body -->
+        {% if dt == 'alumni' %}
+        <div class="well">
+            <h4>Caution</h4>
+            <p>Tekan tombol berikut untuk membuat model anda!.</p>
+            <form method="post">
+                <button class="btn btn-default btn-lg btn-block" type="submit">Buat Model</button>
+            </form>
         </div>
+        {% endif %}
+        <!--<div class="panel panel-info">-->
+            <!--<div class="panel-heading">-->
+                <!--ROC Curve-->
+            <!--</div>-->
+            <!--&lt;!&ndash; /.panel-heading &ndash;&gt;-->
+            <!--<div class="panel-body">-->
+                <!--&lt;!&ndash;<div class="table-responsive">&ndash;&gt;-->
+                    <!--&lt;!&ndash;<img src="/static/ROC.png" alt="ROC" class="img-responsive">&ndash;&gt;-->
+                <!--&lt;!&ndash;</div>&ndash;&gt;-->
+                <!--&lt;!&ndash; /.table-responsive &ndash;&gt;-->
+            <!--</div>-->
+            <!--&lt;!&ndash; /.panel-body &ndash;&gt;-->
+        <!--</div>-->
         <!-- /.panel -->
     </div>
     <!-- /.col-lg-6 -->
