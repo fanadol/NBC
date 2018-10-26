@@ -5,4 +5,5 @@ node_modules
 bower_components
 current_model_cf.csv
 current_model_cv.csv
-kfold.png
+kfold_model.png
+kfold_result.png

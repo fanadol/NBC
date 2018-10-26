@@ -1,4 +1,6 @@
 import pandas as pd
+import matplotlib
+import numpy as np
 
 from NBC.config import Config
 from NBC.models.alumni import Alumni
@@ -6,6 +8,9 @@ from NBC.models.testing import Testing
 from NBC.models.training import Training
 from NBC.models.user import User
 
+matplotlib.use('agg')
+
+import matplotlib.pyplot as plt
 
 def clean_train_column(filename):
     """
@@ -133,3 +138,25 @@ def get_data_length():
         'len_testing': len(Testing.query.all())
     }
     return len_dict
+
+
+def create_bar_chart(output_path, f1, recall, precision, scores):
+    # plot the k fold
+    fig, ax = plt.subplots()
+    bar_width = 0.2
+    N = 10
+    ind = np.arange(N)
+    rect_f1 = ax.bar(ind - 2 * bar_width, f1, bar_width, color='r', label='f1-score')
+    rect_recall = ax.bar(ind - bar_width, recall, bar_width, color='g', label='recall')
+    rect_precision = ax.bar(ind, precision, bar_width, color='b', label='precision')
+    rect_score = ax.bar(ind + bar_width, scores, bar_width, color='y', label='accuracy')
+    ax.set_xlabel('Folds')
+    ax.set_ylabel('Scores')
+    ax.set_title('Stratified 10 Fold Cross Validation')
+    ax.set_xticks(ind + bar_width / 2)
+    ax.set_xticklabels(('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'))
+    ax.legend()
+    fig.set_size_inches(15, 10)
+    fig.tight_layout()
+    plt.savefig(output_path)
+    plt.clf()

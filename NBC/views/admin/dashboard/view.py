@@ -3,15 +3,12 @@ import os
 import time
 import numpy as np
 import pandas as pd
-import matplotlib
-from sklearn.dummy import DummyClassifier
 from werkzeug.utils import secure_filename
 
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
-from sklearn.model_selection import KFold, StratifiedKFold
+from sklearn.model_selection import KFold
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_curve, auc
-from scipy import interp
+from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
 from flask_login import login_required
 
 from NBC.models.alumni import Alumni
@@ -30,11 +27,7 @@ from NBC.service.database_service import save_to_db
 from NBC.models.user import User
 from NBC.config import Config
 from NBC.service.utils_service import allowed_file, get_data_length, clean_train_discretization, grouping_school_type, \
-    grouping_school_city
-
-matplotlib.use('agg')
-
-import matplotlib.pyplot as plt
+    grouping_school_city, create_bar_chart
 
 
 @dashboard.route('/')
@@ -706,26 +699,9 @@ def cross_validation(dt):
         avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
                         avg_recall=np.average(recall), avg_score=np.average(scores))]
         path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        output_path_kfold = os.path.join(path, 'static/kfold.png')
-        # plot the k fold
-        fig, ax = plt.subplots()
-        bar_width = 0.2
-        N = 10
-        ind = np.arange(N)
-        rect_f1 = ax.bar(ind - 2 * bar_width, f1, bar_width, color='r', label='f1-score')
-        rect_recall = ax.bar(ind - bar_width, recall, bar_width, color='g', label='recall')
-        rect_precision = ax.bar(ind, precision, bar_width, color='b', label='precision')
-        rect_score = ax.bar(ind + bar_width, scores, bar_width, color='y', label='accuracy')
-        ax.set_xlabel('Folds')
-        ax.set_ylabel('Scores')
-        ax.set_title('Stratified 10 Fold Cross Validation')
-        ax.set_xticks(ind + bar_width / 2)
-        ax.set_xticklabels(('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'))
-        ax.legend()
-        fig.set_size_inches(15, 10)
-        fig.tight_layout()
-        plt.savefig(output_path_kfold)
-        plt.clf()
+        path_model_kfold = os.path.join(path, 'static/kfold_model.png')
+        path_result_kfold = os.path.join(path, 'static/kfold_result.png')
+        create_bar_chart(path_model_kfold, f1, recall, precision, scores)
         if dt == 'training':
             # save cross validation and confusion matrix as a csv file
             dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
@@ -733,11 +709,13 @@ def cross_validation(dt):
                               pd.DataFrame(recall, columns=['recall']),
                               pd.DataFrame(f1, columns=['f1'])], axis=1)
             dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
+            create_bar_chart(path_result_kfold, f1, recall, precision, scores)
             dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
             dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')
         # if create model button is clicked
         if request.method == "POST":
             delete_all_training()
+            create_bar_chart(path_result_kfold, f1, recall, precision, scores)
             dtobj['ket_lulus'] = dtobj['ket_lulus'].replace([0, 1], ['Tidak Tepat Waktu', 'Tepat Waktu'])
             for i, row in dtobj.iterrows():
                 data = Training(
@@ -757,7 +735,7 @@ def cross_validation(dt):
             dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
                               pd.DataFrame(precision, columns=['precision']),
                               pd.DataFrame(recall, columns=['recall']),
-                              pd.DataFrame(f1, columns=['f1'])])
+                              pd.DataFrame(f1, columns=['f1'])], axis=1)
             dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
             dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
             dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')
