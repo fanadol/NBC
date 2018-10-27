@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import matplotlib
 import numpy as np
@@ -159,4 +161,13 @@ def create_bar_chart(output_path, f1, recall, precision, scores):
     fig.set_size_inches(15, 10)
     fig.tight_layout()
     plt.savefig(output_path)
+    plt.clf()
+
+
+def create_pie_chart(path, labels, sizes):
+    filename = 'piechart.png'
+    fig1, ax1 = plt.subplots()
+    ax1.pie(sizes, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
+    ax1.axis('equal') # Equal aspect ratio ensures that pie is drawn as a circle.
+    plt.savefig(os.path.join(path, filename))
     plt.clf()

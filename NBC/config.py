@@ -7,6 +7,7 @@ class Config:
     SECRET_KEY = os.environ['NBC_KEY']
     DEBUG = True
     ROOT_DIRECTORY = os.path.dirname(os.path.dirname(__file__))
+    STATIC_DIRECTORY = os.path.join(ROOT_DIRECTORY, "NBC", "static")
     ALLOWED_EXTENSION = ['csv']
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:jankenpo@localhost:5432/nbc'
 

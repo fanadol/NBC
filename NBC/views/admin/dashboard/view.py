@@ -27,7 +27,7 @@ from NBC.service.database_service import save_to_db
 from NBC.models.user import User
 from NBC.config import Config
 from NBC.service.utils_service import allowed_file, get_data_length, clean_train_discretization, grouping_school_type, \
-    grouping_school_city, create_bar_chart
+    grouping_school_city, create_bar_chart, create_pie_chart
 
 
 @dashboard.route('/')
@@ -431,14 +431,21 @@ def delete_training():
 @dashboard.route('/prediction', methods=["GET", "POST"])
 @login_required
 def predict():
+    show = False
     pred_data = get_all_prediction_result()
     len_data = get_data_length()
+    if len(pred_data) > 0:
+        show = True
+        cnt = pred_data['result'].value_counts()
+        labels = ['Tidak Tepat Waktu', 'Tepat Waktu']
+        sizes = [cnt['Tidak Tepat Waktu'], cnt['Tepat Waktu']]
+        create_pie_chart(Config.STATIC_DIRECTORY, labels, sizes)
     # from delete button
     if request.method == "POST":
         delete_all_prediction()
         flash('Data telah berhasil dihapus', 'success')
         return redirect(request.url)
-    return render_template('admin_data_predict.html', data=pred_data, len_data=len_data, modal_for='prediksi')
+    return render_template('admin_data_predict.html', data=pred_data, len_data=len_data, modal_for='prediksi', show=show)
 
 
 @dashboard.route('/prediction/create', methods=["GET", "POST"])
@@ -698,9 +705,8 @@ def cross_validation(dt):
         # put the average inside a dict
         avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
                         avg_recall=np.average(recall), avg_score=np.average(scores))]
-        path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        path_model_kfold = os.path.join(path, 'static/kfold_model.png')
-        path_result_kfold = os.path.join(path, 'static/kfold_result.png')
+        path_model_kfold = os.path.join(Config.STATIC_DIRECTORY, 'kfold_model.png')
+        path_result_kfold = os.path.join(Config.STATIC_DIRECTORY, 'kfold_result.png')
         create_bar_chart(path_model_kfold, f1, recall, precision, scores)
         if dt == 'training':
             # save cross validation and confusion matrix as a csv file

@@ -156,6 +156,29 @@ Data Prediksi
     <!-- /.col-lg-12 -->
 </div>
 <!-- /.row -->
+{% if show %}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Pie Chart
+            </div>
+            <!-- /.panel-heading -->
+            <div class="table-responsive">
+                <img src="/static/piechart.png" alt="piechart" class="img-responsive">
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-6 -->
+    <div class="col-lg-6">
+
+    </div>
+    <!-- /.col-lg-6 -->
+</div>
+{% endif %}
+<!-- /.row -->
 <div class="row">
     <div class="col-lg-6">
         <div class="panel panel-default">
@@ -171,7 +194,6 @@ Data Prediksi
                             <th>TS</th>
                             <th>KS</th>
                             <th>JK</th>
-                            <th>GO</th>
                             <th>IPS</th>
                         </tr>
                         </thead>
@@ -180,7 +202,6 @@ Data Prediksi
                             <td>Tipe Sekolah</td>
                             <td>Kota Sekolah</td>
                             <td>Jenis Kelamin</td>
-                            <td>Gaji Orangtua</td>
                             <td>IP Semester</td>
                         </tr>
                         </tbody>
