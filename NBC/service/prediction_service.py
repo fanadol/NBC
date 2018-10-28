@@ -7,7 +7,7 @@ from NBC.models.testing import Testing
 
 
 def get_a_prediction(id):
-    return Testing.query.filter_by(id_mahasiswa=id).first()
+    return Testing.query.filter_by(id=id).first()
 
 
 def get_all_prediction_result():

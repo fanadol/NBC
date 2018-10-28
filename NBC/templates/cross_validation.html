@@ -29,25 +29,22 @@ Model Score
                     </tr>
                     </thead>
                     <tbody>
-                    {% for score in scores %}
+                    {% for i, row in scores.iterrows() %}
                     <tr class="odd gradeX">
-                        <td>{{ score.numb }}</td>
-                        <td>{{ score.score }}</td>
-                        <td>{{ score.precision }}</td>
-                        <td>{{ score.recall }}</td>
-                        <td>{{ score.f1 }}</td>
+                        <td>{{ i + 1 }}</td>
+                        <td>{{ row['accuracy'] }}</td>
+                        <td>{{ row['precision'] }}</td>
+                        <td>{{ row['recall'] }}</td>
+                        <td>{{ row['f1'] }}</td>
                     </tr>
                     {% endfor %}
-                    {% for avg in avg %}
                     <tr class="even gradeC">
                         <td>Mean</td>
-                        <td>{{ avg.avg_score }}</td>
-                        <td>{{ avg.avg_prec }}</td>
-                        <td>{{ avg.avg_recall }}</td>
-                        <td>{{ avg.avg_f1 }}</td>
-                        <td>{{ avg.avg_dummy }}</td>
+                        <td>{{ scores['accuracy'].mean() }}</td>
+                        <td>{{ scores['precision'].mean() }}</td>
+                        <td>{{ scores['recall'].mean() }}</td>
+                        <td>{{ scores['f1'].mean() }}</td>
                     </tr>
-                    {% endfor %}
                     </tbody>
                 </table>
                 <!-- /.table-responsive -->

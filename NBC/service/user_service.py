@@ -5,7 +5,7 @@ from NBC.models.user import User
 
 
 def get_an_user(id):
-    return User.query.filter_by(id=id).first()
+    return User.query.filter_by(email=id).first()
 
 
 def get_all_users(id=False):

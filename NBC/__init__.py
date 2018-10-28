@@ -23,7 +23,4 @@ def create_app(config_name):
     from NBC.views.admin.auth import auth as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    from NBC.views.examples import examples as examples_bp
-    app.register_blueprint(examples_bp, url_prefix='/example')
-
     return app

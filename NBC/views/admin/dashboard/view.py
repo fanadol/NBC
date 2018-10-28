@@ -19,15 +19,16 @@ from . import dashboard
 from NBC.models.testing import Testing
 from NBC.models.training import Training
 from NBC.service.alumni_service import get_all_alumni, get_an_alumni, update_an_alumni, delete_an_alumni, convert_nilai
-from NBC.service.prediction_service import get_all_prediction_result, delete_all_prediction, delete_a_prediction
+from NBC.service.prediction_service import get_all_prediction_result, delete_all_prediction, delete_a_prediction, \
+    get_a_prediction
 from NBC.service.training_service import delete_all_training, get_all_training, get_a_training, update_a_training, \
     delete_a_trainig
 from NBC.service.user_service import get_all_users, get_an_user, update_an_user, delete_an_user
 from NBC.service.database_service import save_to_db
 from NBC.models.user import User
 from NBC.config import Config
-from NBC.service.utils_service import allowed_file, get_data_length, clean_train_discretization, grouping_school_type, \
-    grouping_school_city, create_bar_chart, create_pie_chart
+from NBC.service.utils_service import allowed_file, get_data_length, grouping_school_type, grouping_school_city, \
+    create_bar_chart, create_pie_chart, check_upload_file, predict_data
 
 
 @dashboard.route('/')
@@ -41,48 +42,41 @@ def index():
 def preprocessing():
     if request.method == "POST":
         # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No File Choosen', 'danger')
+        file = check_upload_file(request)
+        if not file:
+            flash('No File Selected', 'danger')
             return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            flash('No File Choosen', 'danger')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            try:
-                timestr = time.strftime("%Y%m%d")
-                filename = timestr + "_" + secure_filename(file.filename)
-                path_upload = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing", filename)
-                file.save(path_upload)
-                csv = pd.read_csv(path_upload)
-                # based on rule you should never modify what you are iterating over
-                mylist = []
-                for i, row in csv.iterrows():
-                    mylist.append({
-                        'NIM': row['NIM'],
-                        'Tipe Sekolah': grouping_school_type(row['Tipe Sekolah']),
-                        'Gender': row['Gender'],
-                        'Kota Sekolah': grouping_school_city(row['Kota Sekolah']),
-                        'IPS_1': row['IPS_1'],
-                        'IPS_2': row['IPS_2'],
-                        'IPS_3': row['IPS_3'],
-                        'IPS_4': row['IPS_4'],
-                        'Keterangan Lulus': row['Keterangan Lulus']
-                    })
-                df = pd.DataFrame(mylist)
-                # sort the column
-                features = ['NIM', 'Tipe Sekolah', 'Gender', 'Kota Sekolah', 'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4']
-                df = df[features]
-                path_save = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing_result",
-                                         filename)
-                path_download = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing_result")
-                df.to_csv(path_save, index=False, encoding='utf-8')
-                return send_from_directory(directory=path_download, filename=filename, as_attachment=True)
-            except Exception as e:
-                flash('Error: {}'.format(e), 'danger')
-                return redirect(url_for('dashboard.alumni'))
+        try:
+            timestr = time.strftime("%Y%m%d")
+            filename = timestr + "_" + secure_filename(file.filename)
+            path_upload = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing", filename)
+            file.save(path_upload)
+            csv = pd.read_csv(path_upload)
+            # based on rule you should never modify what you are iterating over
+            mylist = []
+            for i, row in csv.iterrows():
+                # data selection and grouping
+                mylist.append({
+                    'NIM': row['NIM'],
+                    'Tipe Sekolah': grouping_school_type(row['Tipe Sekolah']),
+                    'Gender': row['Gender'],
+                    'Kota Sekolah': grouping_school_city(row['Kota Sekolah']),
+                    'IPS_1': row['IPS_1'],
+                    'IPS_2': row['IPS_2'],
+                    'IPS_3': row['IPS_3'],
+                    'IPS_4': row['IPS_4'],
+                    'Keterangan Lulus': row['Keterangan Lulus']
+                })
+            features = ['NIM', 'Tipe Sekolah', 'Gender', 'Kota Sekolah', 'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4']
+            df = pd.DataFrame(mylist, columns=features)
+            path_save = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing_result",
+                                     filename)
+            path_download = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing_result")
+            df.to_csv(path_save, index=False, encoding='utf-8')
+            return send_from_directory(directory=path_download, filename=filename, as_attachment=True)
+        except Exception as e:
+            flash('Error: {}'.format(e), 'danger')
+            return redirect(url_for('dashboard.alumni'))
     return render_template('admin_preprocessing.html')
 
 
@@ -160,7 +154,7 @@ def edit_user(id):
 def delete_user():
     if request.method == "POST":
         email = request.form.get('id')
-        exst = User.query.filter_by(email=email).first()
+        exst = get_an_user(email)
         if exst:
             delete_an_user(email)
             flash('User success dihapus.', 'success')
@@ -174,60 +168,50 @@ def delete_user():
 @login_required
 def alumni():
     len_data = get_data_length()
-    alumni = get_all_alumni(id=True)
+    alumni = get_all_alumni()
     # POST METHOD
     if request.method == "POST":
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No File Choosen', 'danger')
+        file = check_upload_file(request)
+        if not file:
+            flash('No File or Wrong Extension!', 'danger')
             return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            flash('No File Choosen', 'danger')
+        try:
+            timestr = time.strftime("%Y%m%d")
+            filename = timestr + "_" + secure_filename(file.filename)
+            path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "alumni", filename)
+            file.save(path)
+            csv = pd.read_csv(path)
+            for i, row in csv.iterrows():
+                # check if the data already exist
+                exst = get_an_alumni(row['NIM'])
+                if exst:
+                    flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
+                    return redirect(request.url)
+            for index, row in csv.iterrows():
+                data_alumni = Alumni(
+                    id=row['NIM'],
+                    school_type=row['Tipe Sekolah'],
+                    gender=row['Gender'],
+                    school_city=row['Kota Sekolah'],
+                    ket_lulus=row['Keterangan Lulus']
+                )
+                # make ipk
+                ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
+                # save the IP value
+                data_nilai = Nilai(
+                    id_alumni=row['NIM'],
+                    semester_1=row['IPS_1'],
+                    semester_2=row['IPS_2'],
+                    semester_3=row['IPS_3'],
+                    semester_4=row['IPS_4'],
+                    ipk=ipk
+                )
+                save_to_db(data_alumni)
+                save_to_db(data_nilai)
+            flash('Successfully menambahkan data alumni', 'success')
             return redirect(request.url)
-        if file and allowed_file(file.filename):
-            try:
-                timestr = time.strftime("%Y%m%d")
-                filename = timestr + "_" + secure_filename(file.filename)
-                path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "alumni", filename)
-                file.save(path)
-                csv = pd.read_csv(path)
-                for i, row in csv.iterrows():
-                    # check if the data already exist
-                    exst = Alumni.query.filter_by(id=row['NIM']).first()
-                    if exst:
-                        flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
-                        return redirect(request.url)
-                for index, row in csv.iterrows():
-                    data_alumni = Alumni(
-                        id=row['NIM'],
-                        school_type=row['Tipe Sekolah'],
-                        gender=row['Gender'],
-                        school_city=row['Kota Sekolah'],
-                        ket_lulus=row['Keterangan Lulus']
-                    )
-                    # make ipk
-                    ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
-                    # save the IP value
-                    data_nilai = Nilai(
-                        id_alumni=row['NIM'],
-                        semester_1=row['IPS_1'],
-                        semester_2=row['IPS_2'],
-                        semester_3=row['IPS_3'],
-                        semester_4=row['IPS_4'],
-                        ipk=ipk
-                    )
-                    save_to_db(data_alumni)
-                    save_to_db(data_nilai)
-                flash('Successfully menambahkan data alumni', 'success')
-                return redirect(request.url)
-            except Exception as e:
-                flash('Error: {}'.format(e), 'danger')
-                return redirect(request.url)
-        else:
-            flash('Invalid file extension!', 'danger')
+        except Exception as e:
+            flash('Error: {}'.format(e), 'danger')
             return redirect(request.url)
     return render_template('admin_data_alumni.html', data=alumni, len_data=len_data, modal_for='alumni')
 
@@ -245,7 +229,7 @@ def create_alumni():
             semester_4 = float(request.form.get('semester_4'))
             ipk = (semester_1 + semester_2 + semester_3 + semester_4) / 4
             # check if the nim is conflict or not
-            exst = Alumni.query.filter_by(id=id).first()
+            exst = get_an_alumni(id)
             if exst:
                 flash('Error: NIM Conflict!', 'danger')
                 return redirect(request.url)
@@ -317,7 +301,7 @@ def edit_alumni(id):
 def delete_alumni():
     if request.method == "POST":
         id = request.form.get('id')
-        exst = Alumni.query.filter_by(id=id).first()
+        exst = get_an_alumni(id)
         if exst:
             delete_an_alumni(id)
             flash('Alumni berhasil dihapus.', 'success')
@@ -333,54 +317,44 @@ def training():
     training_data = get_all_training()
     len_data = get_data_length()
     if request.method == "POST":
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No File Choosen', 'danger')
+        file = check_upload_file(request)
+        if not file:
+            flash('No File or Wrong Extension!', 'danger')
             return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            flash('No File Choosen', 'danger')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            try:
-                # should delete this or no ?
-                delete_all_training()
-                timestr = time.strftime("%Y%m%d")
-                filename = timestr + "_" + secure_filename(file.filename)
-                path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "training", filename)
-                file.save(path)
-                csv = pd.read_csv(path)
-                for i, row in csv.iterrows():
-                    # check if the data already exist
-                    exst = Training.query.filter_by(id=row['NIM']).first()
-                    if exst:
-                        flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
-                        return redirect(request.url)
-                for index, row in csv.iterrows():
-                    # make ipk
-                    ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
-                    data_training = Training(
-                        id=row['NIM'],
-                        school_type=row['Tipe Sekolah'],
-                        gender=row['Gender'],
-                        school_city=row['Kota Sekolah'],
-                        ket_lulus=row['Keterangan Lulus'],
-                        semester_1=row['IPS_1'],
-                        semester_2=row['IPS_2'],
-                        semester_3=row['IPS_3'],
-                        semester_4=row['IPS_4'],
-                        ipk=ipk
-                    )
-                    save_to_db(data_training)
-                flash('Success menambahkan data alumni', 'success')
-                return redirect(url_for('dashboard.cross_validation', dt='training'))
-            except Exception as e:
-                flash('Error: {}'.format(e), 'danger')
-                return redirect(request.url)
-        else:
-            flash('Invalid file extension!', 'danger')
+        try:
+            # should delete this or no ?
+            delete_all_training()
+            timestr = time.strftime("%Y%m%d")
+            filename = timestr + "_" + secure_filename(file.filename)
+            path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "training", filename)
+            file.save(path)
+            csv = pd.read_csv(path)
+            for i, row in csv.iterrows():
+                # check if the data already exist
+                exst = get_a_training(row['NIM'])
+                if exst:
+                    flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
+                    return redirect(request.url)
+            for index, row in csv.iterrows():
+                # make ipk
+                ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
+                data_training = Training(
+                    id=row['NIM'],
+                    school_type=row['Tipe Sekolah'],
+                    gender=row['Gender'],
+                    school_city=row['Kota Sekolah'],
+                    ket_lulus=row['Keterangan Lulus'],
+                    semester_1=row['IPS_1'],
+                    semester_2=row['IPS_2'],
+                    semester_3=row['IPS_3'],
+                    semester_4=row['IPS_4'],
+                    ipk=ipk
+                )
+                save_to_db(data_training)
+            flash('Success menambahkan data alumni', 'success')
+            return redirect(url_for('dashboard.cross_validation', dt='training'))
+        except Exception as e:
+            flash('Error: {}'.format(e), 'danger')
             return redirect(request.url)
     return render_template('admin_data_training.html', data=training_data, len_data=len_data, modal_for='data training')
 
@@ -418,7 +392,7 @@ def edit_training(id):
 def delete_training():
     if request.method == "POST":
         id = request.form.get('id')
-        exst = Training.query.filter_by(id=id).first()
+        exst = get_a_training(id)
         if exst:
             delete_a_trainig(id)
             flash('Data training success dihapus.', 'success')
@@ -437,6 +411,10 @@ def predict():
     if len(pred_data) > 0:
         show = True
         cnt = pred_data['result'].value_counts()
+        if 'Tepat Waktu' not in cnt:
+            cnt['Tepat Waktu'] = 0
+        if 'Tidak Tepat Waktu' not in cnt:
+            cnt['Tidak Tepat Waktu'] = 0
         labels = ['Tidak Tepat Waktu', 'Tepat Waktu']
         sizes = [cnt['Tidak Tepat Waktu'], cnt['Tepat Waktu']]
         create_pie_chart(Config.STATIC_DIRECTORY, labels, sizes)
@@ -445,23 +423,27 @@ def predict():
         delete_all_prediction()
         flash('Data telah berhasil dihapus', 'success')
         return redirect(request.url)
-    return render_template('admin_data_predict.html', data=pred_data, len_data=len_data, modal_for='prediksi', show=show)
+    return render_template('admin_data_predict.html', data=pred_data, len_data=len_data, modal_for='prediksi',
+                           show=show)
 
 
 @dashboard.route('/prediction/create', methods=["GET", "POST"])
 @login_required
 def create_predict():
-    # get training data for prediction
-    train_data = get_all_training()
     if request.method == "POST":
         try:
+            # get training data for prediction
+            train_data = get_all_training()
+            if train_data.empty:
+                flash('Tidak ada data training, silahkan buat model terlebih dahulu.', 'danger')
+                return redirect(request.url)
             if not request.form.get('id'):
                 flash('Fill all empty form!', 'danger')
                 return redirect(request.url)
             # get the data from frontend form
-            id = request.form.get('angkatan') + '.11.' + request.form.get('id')
+            id = request.form.get('angkatan') + '.11.' + request.form.get('id').zfill(4)
             # check if the nim already in databases
-            exst = Testing.query.filter_by(id=id).first()
+            exst = get_a_prediction(id)
             # if already in databases, return with alert error
             if exst:
                 flash('Error, NIM Duplicated!', 'danger')
@@ -483,25 +465,7 @@ def create_predict():
                 'semester_4': convert_nilai(semester_4),
                 'ipk': convert_nilai(ipk)
             }
-            # make dataframe from test data
-            df = pd.DataFrame(test_data, index=[0])
-            # replace the train ket_lulus into number
-            train_data['ket_lulus'] = train_data['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-            # concat the dataframe with train data, fill NaN with 0, convert ket_lulus into int type
-            con = pd.concat([train_data.drop('id', axis=1), df.drop('id', axis=1)], keys=['train', 'test'],
-                            sort=True).fillna(0)
-            con['ket_lulus'] = con['ket_lulus'].astype(int)
-            # one hot encoder all, make sure
-            enc = pd.get_dummies(con)
-            # split x, y, and target
-            x = enc.loc['train'].drop('ket_lulus', axis=1)
-            y = enc.loc['train']['ket_lulus']
-            target = enc.loc['test'].drop('ket_lulus', axis=1)
-            # build the model
-            model = MultinomialNB()
-            model.fit(x, y)
-            # predict the data
-            y_pred = model.predict(target)
+            y_pred = predict_data(train_data, test_data, index=True)
             # convert the result into string
             if y_pred == 0:
                 y_pred = 'Tidak Tepat Waktu'
@@ -540,90 +504,69 @@ def predict_csv():
     train_data = get_all_training()
     if request.method == "POST":
         try:
-            # check if the post request has the file part
-            if 'file' not in request.files:
-                flash('No File Choosen', 'danger')
+            file = check_upload_file(request)
+            if not file:
+                flash('No File or Wrong Extension!', 'danger')
                 return redirect(request.url)
-            file = request.files['file']
-            # if user does not select file, browser also
-            # submit an empty part without filename
-            if file.filename == '':
-                flash('No File Choosen', 'danger')
-                return redirect(request.url)
-            if file and allowed_file(file.filename):
-                timestr = time.strftime("%Y%m%d")
-                filename = timestr + "_" + secure_filename(file.filename)
-                path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "prediksi", filename)
-                file.save(path)
-                csv = pd.read_csv(path)
-                for i, row in csv.iterrows():
-                    exst = Testing.query.filter_by(id=row['NIM']).first()
-                    if exst:
-                        flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
-                        return redirect(request.url)
-                    # END FOR
-                # make list of dict
-                pred_list = []
-                for index, row in csv.iterrows():
-                    ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
-                    # save the data into database
-                    # the reason is, i want to store the value with number data type, not discret.
-                    obj_testing = Testing(
-                        id=row['NIM'],
-                        school_type=row['Tipe Sekolah'],
-                        gender=row['Gender'],
-                        school_city=row['Kota Sekolah'],
-                        semester_1=row['IPS_1'],
-                        semester_2=row['IPS_2'],
-                        semester_3=row['IPS_3'],
-                        semester_4=row['IPS_4'],
-                        ipk=ipk
-                    )
-                    save_to_db(obj_testing)
-                    # convert all IP and insert it to list
-                    pred_list.append({
-                        'id': row['NIM'],
-                        'school_type': row['Tipe Sekolah'],
-                        'gender': row['Gender'],
-                        'school_city': row['Kota Sekolah'],
-                        'semester_1': convert_nilai(row['IPS_1']),
-                        'semester_2': convert_nilai(row['IPS_2']),
-                        'semester_3': convert_nilai(row['IPS_3']),
-                        'semester_4': convert_nilai(row['IPS_4']),
-                        'ipk': convert_nilai(ipk)
-                    })
-                    # END FOR
-                data_test = pd.DataFrame(pred_list)
-                train_data['ket_lulus'] = train_data['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-                df_concat = pd.concat([train_data, data_test.drop('id', axis=1)], keys=['train', 'test'],
-                                      sort=True).fillna(0)
-                df_concat['ket_lulus'] = df_concat['ket_lulus'].astype(int)
-                enc = pd.get_dummies(df_concat)
-                x = enc.loc['train'].drop('ket_lulus', axis=1)
-                y = enc.loc['train']['ket_lulus']
-                target = enc.loc['test'].drop('ket_lulus', axis=1)
-                model = MultinomialNB()
-                model.fit(x, y)
-                y_pred = model.predict(target)
-                # make data frame from y pred
-                y_pred = pd.DataFrame(y_pred, columns=['result'])
-                y_pred['result'] = y_pred['result'].replace([0, 1], ['Tidak Tepat Waktu', 'Tepat Waktu'])
-                # insert into database
-                # combine the result and the data
-                dfr = pd.concat([data_test, y_pred], axis=1, sort=True)
-                for i, row in dfr.iterrows():
-                    obj_hasil = Hasil(
-                        id_testing=row['id'],
-                        result=row['result']
-                    )
-                    save_to_db(obj_hasil)
-                flash('Prediksi Berhasil', 'success')
-                return redirect(url_for('dashboard.predict'))
+            timestr = time.strftime("%Y%m%d")
+            filename = timestr + "_" + secure_filename(file.filename)
+            path = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "prediksi", filename)
+            file.save(path)
+            csv = pd.read_csv(path)
+            for i, row in csv.iterrows():
+                exst = get_a_prediction(row['NIM'])
+                if exst:
+                    flash('ID Terduplikasi, Tidak ada perubahan yang dilakukan.', 'danger')
+                    return redirect(request.url)
+                # END FOR
+            # make list of dict
+            data_target = []
+            for index, row in csv.iterrows():
+                ipk = (row['IPS_1'] + row['IPS_2'] + row['IPS_3'] + row['IPS_4']) / 4
+                # save the data into database
+                # the reason is, i want to store the value with number data type, not discret.
+                obj_testing = Testing(
+                    id=row['NIM'],
+                    school_type=row['Tipe Sekolah'],
+                    gender=row['Gender'],
+                    school_city=row['Kota Sekolah'],
+                    semester_1=row['IPS_1'],
+                    semester_2=row['IPS_2'],
+                    semester_3=row['IPS_3'],
+                    semester_4=row['IPS_4'],
+                    ipk=ipk
+                )
+                save_to_db(obj_testing)
+                # convert all IP and insert it to list
+                data_target.append({
+                    'id': row['NIM'],
+                    'school_type': row['Tipe Sekolah'],
+                    'gender': row['Gender'],
+                    'school_city': row['Kota Sekolah'],
+                    'semester_1': convert_nilai(row['IPS_1']),
+                    'semester_2': convert_nilai(row['IPS_2']),
+                    'semester_3': convert_nilai(row['IPS_3']),
+                    'semester_4': convert_nilai(row['IPS_4']),
+                    'ipk': convert_nilai(ipk)
+                })
+                # END FOR
+            y_pred = predict_data(train_data, data_target)
+            # make data frame from y pred
+            y_pred = pd.DataFrame(y_pred, columns=['result'])
+            y_pred['result'] = y_pred['result'].replace([0, 1], ['Tidak Tepat Waktu', 'Tepat Waktu'])
+            # insert into database
+            # combine the result and the data
+            dfr = pd.concat([pd.DataFrame(data_target), y_pred], axis=1, sort=True)
+            for i, row in dfr.iterrows():
+                obj_hasil = Hasil(
+                    id_testing=row['id'],
+                    result=row['result']
+                )
+                save_to_db(obj_hasil)
+            flash('Prediksi Berhasil', 'success')
+            return redirect(url_for('dashboard.predict'))
         except Exception as e:
             flash('Error: {}'.format(e), 'danger')
-            return redirect(request.url)
-        else:
-            flash('Invalid file extension!', 'danger')
             return redirect(request.url)
     return render_template('admin_prediksi_csv.html')
 
@@ -633,7 +576,7 @@ def predict_csv():
 def delete_predict():
     if request.method == "POST":
         id = request.form.get('id')
-        exst = Testing.query.filter_by(id=id).first()
+        exst = get_a_prediction(id)
         if exst:
             delete_a_prediction(id)
             flash('Data prediksi success dihapus.', 'success')
@@ -649,12 +592,15 @@ def cross_validation(dt):
     try:
         # query all the data
         if dt == 'alumni':
-            dtobj = get_all_alumni(id=True)
+            dtobj = get_all_alumni()
         else:
             dtobj = get_all_training()
-        # one hot encoder
+        if dtobj.empty:
+            flash('Tidak ada data.', 'danger')
+            return redirect(url_for('dashboard.alumni'))
+        # convert class label into number, so that it will not be encoded
         dtobj['ket_lulus'] = dtobj['ket_lulus'].replace(['Tidak Tepat Waktu', 'Tepat Waktu'], [0, 1])
-        # i dont know how to chagne the value, so i make a list
+        # based on you should never change what you itterating over, make a list and make a new data frame
         mydf = []
         for i, row in dtobj.iterrows():
             mydf.append({
@@ -670,14 +616,18 @@ def cross_validation(dt):
                 'ket_lulus': row['ket_lulus']
             })
         df = pd.DataFrame(mydf)
+        # One Hot Encoder
         enc = pd.get_dummies(df.drop(['id'], axis=1))
+        # Split X, and Y
         x = np.array(enc.drop('ket_lulus', axis=1))
         y = np.array(enc['ket_lulus'])
+        # determine the label for confusion matrix
         labels = np.unique(y)
         # create the model
         model = MultinomialNB()
-        # cross validation
+        # initialize kfold
         kf = KFold(n_splits=10)
+        # initialize confusion matrix
         cf = np.array([[0, 0], [0, 0]])
         f1 = []
         recall = []
@@ -691,29 +641,23 @@ def cross_validation(dt):
             y_pred = model.predict(x_test)
             # compute confusion matrix, ROC curve and AUC
             cf += confusion_matrix(y_test, y_pred, labels=labels)
+            print(cf)
             # calculate the accuracy, f1-score, recall, precision
-            f1.append(f1_score(y_test, y_pred, average='macro'))
-            recall.append(recall_score(y_test, y_pred, average='macro'))
-            precision.append(precision_score(y_test, y_pred, average='macro'))
-            score = model.score(x_test, y_test)
-            scores.append(score)
-        # put all scores inside a dict
-        items = []
-        for i in range(len(scores)):
-            item = dict(numb=i + 1, f1=f1[i], precision=precision[i], recall=recall[i], score=scores[i])
-            items.append(item)
-        # put the average inside a dict
-        avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
-                        avg_recall=np.average(recall), avg_score=np.average(scores))]
+            f1.append(f1_score(y_test, y_pred))
+            recall.append(recall_score(y_test, y_pred))
+            precision.append(precision_score(y_test, y_pred))
+            scores.append(model.score(x_test, y_test))
+        dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
+                          pd.DataFrame(precision, columns=['precision']),
+                          pd.DataFrame(recall, columns=['recall']),
+                          pd.DataFrame(f1, columns=['f1'])], axis=1)
+        # # put the average inside a dict
+        # avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
+        #                 avg_recall=np.average(recall), avg_score=np.average(scores))]
         path_model_kfold = os.path.join(Config.STATIC_DIRECTORY, 'kfold_model.png')
         path_result_kfold = os.path.join(Config.STATIC_DIRECTORY, 'kfold_result.png')
         create_bar_chart(path_model_kfold, f1, recall, precision, scores)
         if dt == 'training':
-            # save cross validation and confusion matrix as a csv file
-            dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
-                              pd.DataFrame(precision, columns=['precision']),
-                              pd.DataFrame(recall, columns=['recall']),
-                              pd.DataFrame(f1, columns=['f1'])], axis=1)
             dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
             create_bar_chart(path_result_kfold, f1, recall, precision, scores)
             dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
@@ -737,18 +681,13 @@ def cross_validation(dt):
                     ket_lulus=row['ket_lulus']
                 )
                 save_to_db(data)
-            # save cross validation and confusion matrix as a csv file
-            dfcv = pd.concat([pd.DataFrame(scores, columns=['accuracy']),
-                              pd.DataFrame(precision, columns=['precision']),
-                              pd.DataFrame(recall, columns=['recall']),
-                              pd.DataFrame(f1, columns=['f1'])], axis=1)
             dfcf = pd.DataFrame(cf, columns=['P_Negative', 'P_Positive'])
             dfcv.to_csv('current_model_cv.csv', index=False, encoding='utf-8')
             dfcf.to_csv('current_model_cf.csv', index=False, encoding='utf-8')
             flash('Successfully create a model', 'success')
             return redirect(url_for('dashboard.index'))
         # < END POST REQUEST >
-        return render_template('cross_validation.html', scores=items, cf=cf, avg=avgitem, dt=dt)
+        return render_template('cross_validation.html', scores=dfcv, cf=cf, dt=dt)
     except Exception as e:
         flash('Error: {}'.format(e), 'danger')
         return redirect(url_for('dashboard.alumni'))
