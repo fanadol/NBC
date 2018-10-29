@@ -122,6 +122,17 @@
                     <li>
                         <a href="{{ url_for('dashboard.guide') }}"><i class="fa fa-book fa-fw"></i> Manual Book</a>
                     </li>
+                    <li>
+                        <a href="#"><i class="fa  fa-times fa-fw"></i> Delete<span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level">
+                            <li>
+                                <a href="{{ url_for('dashboard.wipe_alumni') }}"> Hapus Data Alumni</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('dashboard.wipe_training') }}"> Hapus Model</a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
             <!-- /.sidebar-collapse -->

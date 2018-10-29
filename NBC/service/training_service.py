@@ -10,7 +10,7 @@ def delete_all_training():
 
 
 def get_a_training(id):
-    return Training.query.filter_by(nim=id).first()
+    return Training.query.filter_by(id=id).first()
 
 
 def get_all_training():
@@ -44,11 +44,11 @@ def update_a_training(obj, updatedObj):
     obj.semester_2 = updatedObj['semester_2']
     obj.semester_3 = updatedObj['semester_3']
     obj.semester_4 = updatedObj['semester_4']
-    obj.ipk = updatedObj['ipk']
+    obj.ipk = float("%.2f" % updatedObj['ipk'])
     obj.ket_lulus = updatedObj['ket_lulus']
     db.session.commit()
 
 
 def delete_a_trainig(id):
-    Training.query.filter_by(nim=id).delete()
+    Training.query.filter_by(id=id).delete()
     db.session.commit()

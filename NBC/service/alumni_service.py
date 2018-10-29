@@ -45,6 +45,12 @@ def delete_an_alumni(id):
     db.session.commit()
 
 
+def delete_all_alumni():
+    Nilai.query.delete()
+    Alumni.query.delete()
+    db.session.commit()
+
+
 def convert_nilai(ip):
     if ip >= 3.5:
         nilai = 'A'

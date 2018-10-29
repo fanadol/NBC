@@ -4,7 +4,6 @@ import time
 import numpy as np
 import pandas as pd
 from werkzeug.utils import secure_filename
-
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from sklearn.model_selection import KFold
 from sklearn.naive_bayes import MultinomialNB
@@ -18,7 +17,8 @@ from NBC.service.nilai_service import get_a_nilai, update_a_nilai
 from . import dashboard
 from NBC.models.testing import Testing
 from NBC.models.training import Training
-from NBC.service.alumni_service import get_all_alumni, get_an_alumni, update_an_alumni, delete_an_alumni, convert_nilai
+from NBC.service.alumni_service import get_all_alumni, get_an_alumni, update_an_alumni, delete_an_alumni, convert_nilai, \
+    delete_all_alumni
 from NBC.service.prediction_service import get_all_prediction_result, delete_all_prediction, delete_a_prediction, \
     get_a_prediction
 from NBC.service.training_service import delete_all_training, get_all_training, get_a_training, update_a_training, \
@@ -27,7 +27,7 @@ from NBC.service.user_service import get_all_users, get_an_user, update_an_user,
 from NBC.service.database_service import save_to_db
 from NBC.models.user import User
 from NBC.config import Config
-from NBC.service.utils_service import allowed_file, get_data_length, grouping_school_type, grouping_school_city, \
+from NBC.service.utils_service import get_data_length, grouping_school_type, grouping_school_city, \
     create_bar_chart, create_pie_chart, check_upload_file, predict_data
 
 
@@ -44,7 +44,7 @@ def preprocessing():
         # check if the post request has the file part
         file = check_upload_file(request)
         if not file:
-            flash('No File Selected', 'danger')
+            flash('Ouch! Terjadi Error, Silahkan Periksa Ulang File Anda!', 'danger')
             return redirect(request.url)
         try:
             timestr = time.strftime("%Y%m%d")
@@ -115,7 +115,7 @@ def create_user():
         save_to_db(data)
         flash('User berhasil dibuat', 'success')
         return redirect(url_for('dashboard.create_user'))
-    return render_template('admin_user_create.html')
+    return render_template('admin_create_user.html')
 
 
 @dashboard.route('/user/<id>', methods=["GET", "POST"])
@@ -173,7 +173,7 @@ def alumni():
     if request.method == "POST":
         file = check_upload_file(request)
         if not file:
-            flash('No File or Wrong Extension!', 'danger')
+            flash('Ouch! Terjadi Error, Silahkan Periksa Ulang File Anda!', 'danger')
             return redirect(request.url)
         try:
             timestr = time.strftime("%Y%m%d")
@@ -204,7 +204,7 @@ def alumni():
                     semester_2=row['IPS_2'],
                     semester_3=row['IPS_3'],
                     semester_4=row['IPS_4'],
-                    ipk=ipk
+                    ipk=float("%.2f" % ipk)
                 )
                 save_to_db(data_alumni)
                 save_to_db(data_nilai)
@@ -247,7 +247,7 @@ def create_alumni():
                 semester_2=semester_2,
                 semester_3=semester_3,
                 semester_4=semester_4,
-                ipk=ipk
+                ipk=float("%.2f" % ipk)
             )
             # insert into database
             save_to_db(que_alumni)
@@ -275,7 +275,6 @@ def edit_alumni(id):
                 'school_type': request.form.get('school_type'),
                 'gender': request.form.get('gender'),
                 'school_city': request.form.get('school_city'),
-                # 'parent_salary': request.form.get('parent_salary'),
                 'ket_lulus': request.form.get('ket_lulus')
             }
             updated_nilai = {
@@ -311,6 +310,16 @@ def delete_alumni():
             return redirect(url_for('dashboard.alumni'))
 
 
+@dashboard.route('/alumni/wipe', methods=["GET", "POST"])
+@login_required
+def wipe_alumni():
+    if request.method == "POST":
+        delete_all_alumni()
+        flash('Success menghapus semua data alumni', 'success')
+        return redirect(url_for('dashboard.alumni'))
+    return render_template('admin_wipe_alumni.html')
+
+
 @dashboard.route('/training', methods=["GET", "POST"])
 @login_required
 def training():
@@ -319,7 +328,7 @@ def training():
     if request.method == "POST":
         file = check_upload_file(request)
         if not file:
-            flash('No File or Wrong Extension!', 'danger')
+            flash('Ouch! Terjadi Error, Silahkan Periksa Ulang File Anda!', 'danger')
             return redirect(request.url)
         try:
             # should delete this or no ?
@@ -348,7 +357,7 @@ def training():
                     semester_2=row['IPS_2'],
                     semester_3=row['IPS_3'],
                     semester_4=row['IPS_4'],
-                    ipk=ipk
+                    ipk=float("%.2f" % ipk)
                 )
                 save_to_db(data_training)
             flash('Success menambahkan data alumni', 'success')
@@ -402,6 +411,20 @@ def delete_training():
             return redirect(url_for('dashboard.training'))
 
 
+@dashboard.route('/training/wipe', methods=["GET", "POST"])
+@login_required
+def wipe_training():
+    if request.method == "POST":
+        delete_all_training()
+        os.remove(os.path.join(Config.ROOT_DIRECTORY, "current_model_cf.csv"))
+        os.remove(os.path.join(Config.ROOT_DIRECTORY, "current_model_cv.csv"))
+        os.remove(os.path.join(Config.STATIC_DIRECTORY, "kfold_model.png"))
+        os.remove(os.path.join(Config.STATIC_DIRECTORY, "kfold_result.png"))
+        flash('Success menghapus semua data training', 'success')
+        return redirect(url_for('dashboard.training'))
+    return render_template('admin_wipe_training.html')
+
+
 @dashboard.route('/prediction', methods=["GET", "POST"])
 @login_required
 def predict():
@@ -421,6 +444,7 @@ def predict():
     # from delete button
     if request.method == "POST":
         delete_all_prediction()
+        os.remove(os.path.join(Config.STATIC_DIRECTORY, 'piechart.png'))
         flash('Data telah berhasil dihapus', 'success')
         return redirect(request.url)
     return render_template('admin_data_predict.html', data=pred_data, len_data=len_data, modal_for='prediksi',
@@ -477,12 +501,11 @@ def create_predict():
                 school_type=test_data['school_type'],
                 gender=test_data['gender'],
                 school_city=test_data['school_city'],
-                # parent_salary=test_data['parent_salary'],
                 semester_1=semester_1,
                 semester_2=semester_2,
                 semester_3=semester_3,
                 semester_4=semester_4,
-                ipk=ipk
+                ipk=float("%.2f" % ipk)
             )
             que_hasil = Hasil(
                 id_testing=test_data['id'],
@@ -506,7 +529,7 @@ def predict_csv():
         try:
             file = check_upload_file(request)
             if not file:
-                flash('No File or Wrong Extension!', 'danger')
+                flash('Ouch! Terjadi Error, Silahkan Periksa Ulang File Anda!', 'danger')
                 return redirect(request.url)
             timestr = time.strftime("%Y%m%d")
             filename = timestr + "_" + secure_filename(file.filename)
@@ -534,7 +557,7 @@ def predict_csv():
                     semester_2=row['IPS_2'],
                     semester_3=row['IPS_3'],
                     semester_4=row['IPS_4'],
-                    ipk=ipk
+                    ipk=float("%.2f" % ipk)
                 )
                 save_to_db(obj_testing)
                 # convert all IP and insert it to list
@@ -641,7 +664,6 @@ def cross_validation(dt):
             y_pred = model.predict(x_test)
             # compute confusion matrix, ROC curve and AUC
             cf += confusion_matrix(y_test, y_pred, labels=labels)
-            print(cf)
             # calculate the accuracy, f1-score, recall, precision
             f1.append(f1_score(y_test, y_pred))
             recall.append(recall_score(y_test, y_pred))
@@ -651,9 +673,6 @@ def cross_validation(dt):
                           pd.DataFrame(precision, columns=['precision']),
                           pd.DataFrame(recall, columns=['recall']),
                           pd.DataFrame(f1, columns=['f1'])], axis=1)
-        # # put the average inside a dict
-        # avgitem = [dict(avg_f1=np.average(f1), avg_prec=np.average(precision),
-        #                 avg_recall=np.average(recall), avg_score=np.average(scores))]
         path_model_kfold = os.path.join(Config.STATIC_DIRECTORY, 'kfold_model.png')
         path_result_kfold = os.path.join(Config.STATIC_DIRECTORY, 'kfold_result.png')
         create_bar_chart(path_model_kfold, f1, recall, precision, scores)

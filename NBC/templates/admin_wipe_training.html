@@ -1,0 +1,34 @@
+{% extends 'template.html' %}
+
+{% block title %}
+Admin - Prediksi CSV
+{% endblock %}
+
+{% block subtitle %}
+Prediksi
+{% endblock %}
+
+{% block content %}
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Hapus Model
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <p>Apakah anda yang ingin menghapus semua data training?</p>
+                <p>Aksi ini tidak dapat dibatalkan, periksa baik baik pilihan anda!</p>
+                <form method="POST">
+                    <button type="submit" class="btn btn-danger">Ya, Saya Yakin.</button>
+                </form>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->
+{% endblock %}
