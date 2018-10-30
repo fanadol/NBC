@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
@@ -19,6 +19,10 @@ def create_app(config_name):
     db.init_app(app)
     login_manager.init_app(app)
     flask_bcrypt.init_app(app)
+
+    @app.route('/')
+    def index():
+        return redirect(url_for('dashboard.alumni'))
 
     from NBC.views.admin.dashboard import dashboard as dashboard_bp
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')

@@ -49,7 +49,7 @@ def preprocessing():
         try:
             timestr = time.strftime("%Y%m%d")
             filename = timestr + "_" + secure_filename(file.filename)
-            path_upload = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing", filename)
+            path_upload = os.path.join(Config.STATIC_DIRECTORY, "upload", "preprocessing", filename)
             file.save(path_upload)
             csv = pd.read_csv(path_upload)
             # based on rule you should never modify what you are iterating over
@@ -67,11 +67,11 @@ def preprocessing():
                     'IPS_4': row['IPS_4'],
                     'Keterangan Lulus': row['Keterangan Lulus']
                 })
-            features = ['NIM', 'Tipe Sekolah', 'Gender', 'Kota Sekolah', 'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4']
+            features = ['NIM', 'Tipe Sekolah', 'Gender', 'Kota Sekolah', 'IPS_1', 'IPS_2', 'IPS_3', 'IPS_4',
+                        'Keterangan Lulus']
             df = pd.DataFrame(mylist, columns=features)
-            path_save = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing_result",
-                                     filename)
-            path_download = os.path.join(Config.ROOT_DIRECTORY, "NBC", "static", "upload", "preprocessing_result")
+            path_save = os.path.join(Config.STATIC_DIRECTORY, "upload", "preprocessing_result", filename)
+            path_download = os.path.join(Config.STATIC_DIRECTORY, "upload", "preprocessing_result")
             df.to_csv(path_save, index=False, encoding='utf-8')
             return send_from_directory(directory=path_download, filename=filename, as_attachment=True)
         except Exception as e:
