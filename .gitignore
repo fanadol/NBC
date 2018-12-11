@@ -8,3 +8,6 @@ current_model_cv.csv
 kfold_model.png
 kfold_result.png
 piechart.png
+mhs_test_datasets_multinomial.csv
+mhs_test_datasets.csv
+golf_dataset.csv
